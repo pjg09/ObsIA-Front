@@ -25,3 +25,99 @@ replay_pid*
 
 # Kotlin Gradle plugin data, see https://kotlinlang.org/docs/whatsnew20.html#new-directory-for-kotlin-data-in-gradle-projects
 .kotlin/
+
+# ==========================================
+# KOTLIN / JVM
+# ==========================================
+*.class
+*.jar
+*.war
+*.ear
+*.nar
+*.zip
+*.tar.gz
+*.rar
+out/
+build/
+target/
+.gradle/
+gradle-app.setting
+!gradle-wrapper.jar
+.gradletasknamecache
+hs_err_pid*
+
+# ==========================================
+# VISUAL STUDIO CODE
+# ==========================================
+.vscode/*
+!.vscode/settings.json
+!.vscode/tasks.json
+!.vscode/launch.json
+!.vscode/extensions.json
+!.vscode/*.code-snippets
+.history/
+*.vsix
+
+# ==========================================
+# WINDOWS
+# ==========================================
+Thumbs.db
+Thumbs.db:encryptable
+ehthumbs.db
+ehthumbs_vista.db
+Desktop.ini
+$RECYCLE.BIN/
+*.cab
+*.msi
+*.msix
+*.msm
+*.msp
+*.lnk
+
+# ==========================================
+# UBUNTU / LINUX
+# ==========================================
+*~
+.fuse_hidden*
+.directory
+.Trash-*
+.nfs*
+
+# ==========================================
+# macOS (por si se suma alguien más)
+# ==========================================
+.DS_Store
+.AppleDouble
+.LSOverride
+
+# ==========================================
+# ENTORNOS / ENV
+# ==========================================
+.env
+.env.local
+.env.*.local
+*.env
+
+# ==========================================
+# LOGS
+# ==========================================
+*.log
+logs/
+npm-debug.log*
+yarn-debug.log*
+yarn-error.log*
+
+# ==========================================
+# NODE (si usas herramientas JS para el front)
+# ==========================================
+node_modules/
+dist/
+.npm
+
+# ==========================================
+# INTELLIJ / ANDROID STUDIO (por si acaso)
+# ==========================================
+.idea/
+*.iws
+*.iml
+*.ipr
