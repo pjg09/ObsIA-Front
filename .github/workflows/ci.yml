@@ -34,8 +34,8 @@ jobs:
       - name: Grant execute permission for gradlew
         run: chmod +x gradlew
 
-      - name: Build with Gradle
-        run: ./gradlew build
+      - name: Build debug APK
+        run: ./gradlew assembleDebug
 
       - name: Run tests
         run: ./gradlew test
@@ -45,13 +45,13 @@ jobs:
         uses: actions/upload-artifact@v4
         with:
           name: test-report
-          path: build/reports/tests/test/
+          path: app/build/reports/tests/
 
-      - name: Upload build artifact
+      - name: Upload APK
         uses: actions/upload-artifact@v4
         with:
-          name: app-jar
-          path: build/libs/*.jar
+          name: app-apk
+          path: app/build/outputs/apk/debug/*.apk  # ← APK, no JAR
 
   # ==========================================
   # JOB 2: Release automático (solo en push a main)
@@ -68,11 +68,11 @@ jobs:
         with:
           fetch-depth: 0
 
-      - name: Download build artifact
+      - name: Download APK
         uses: actions/download-artifact@v4
         with:
-          name: app-jar
-          path: build/libs/
+          name: app-apk          # ← mismo nombre que en upload
+          path: app/build/outputs/apk/debug/
 
       - name: Calculate next version
         id: version
@@ -87,27 +87,17 @@ jobs:
 
           COMMITS=$(git log $LAST_TAG..HEAD --pretty=format:"%s" 2>/dev/null || git log --pretty=format:"%s")
 
-          # Determinar tipo de cambio
           if echo "$COMMITS" | grep -qiE "BREAKING CHANGE|major:"; then
-            MAJOR=$((MAJOR + 1))
-            MINOR=0
-            PATCH=0
-            SHOULD_RELEASE=true
+            MAJOR=$((MAJOR + 1)); MINOR=0; PATCH=0; SHOULD_RELEASE=true
           elif echo "$COMMITS" | grep -qiE "^feat:|^feature:"; then
-            MINOR=$((MINOR + 1))
-            PATCH=0
-            SHOULD_RELEASE=true
+            MINOR=$((MINOR + 1)); PATCH=0; SHOULD_RELEASE=true
           elif echo "$COMMITS" | grep -qiE "^fix:"; then
-            PATCH=$((PATCH + 1))
-            SHOULD_RELEASE=true
+            PATCH=$((PATCH + 1)); SHOULD_RELEASE=true
           else
-            # chore, docs, refactor → sin release
             SHOULD_RELEASE=false
           fi
 
           NEW_VERSION="v$MAJOR.$MINOR.$PATCH"
-          echo "New version: $NEW_VERSION"
-          echo "Should release: $SHOULD_RELEASE"
           echo "version=$NEW_VERSION" >> $GITHUB_OUTPUT
           echo "should_release=$SHOULD_RELEASE" >> $GITHUB_OUTPUT
 
@@ -122,15 +112,9 @@ jobs:
           FIXES=$(git log $LAST_TAG..HEAD --pretty=format:"- %s (%h)" | grep -iE "^- fix:" || true)
 
           CHANGELOG=""
-          if [ -n "$BREAKING" ]; then
-            CHANGELOG="${CHANGELOG}## 💥 Breaking Changes\n${BREAKING}\n\n"
-          fi
-          if [ -n "$FEATURES" ]; then
-            CHANGELOG="${CHANGELOG}## ✨ New Features\n${FEATURES}\n\n"
-          fi
-          if [ -n "$FIXES" ]; then
-            CHANGELOG="${CHANGELOG}## 🐛 Bug Fixes\n${FIXES}\n\n"
-          fi
+          [ -n "$BREAKING" ] && CHANGELOG="${CHANGELOG}## 💥 Breaking Changes\n${BREAKING}\n\n"
+          [ -n "$FEATURES" ] && CHANGELOG="${CHANGELOG}## ✨ New Features\n${FEATURES}\n\n"
+          [ -n "$FIXES" ]    && CHANGELOG="${CHANGELOG}## 🐛 Bug Fixes\n${FIXES}\n\n"
 
           printf "$CHANGELOG" > changelog_body.md
 
@@ -142,7 +126,7 @@ jobs:
           name: Release ${{ steps.version.outputs.version }}
           draft: false
           prerelease: false
-          files: build/libs/*.jar
+          files: app/build/outputs/apk/debug/*.apk   # ← APK
           body_path: changelog_body.md
           fail_on_unmatched_files: true
         env:
