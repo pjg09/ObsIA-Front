@@ -121,3 +121,21 @@ dist/
 *.iws
 *.iml
 *.ipr
+
+# Local config (tiene rutas absolutas de tu máquina)
+local.properties
+
+# Build outputs
+build/
+app/build/
+
+# Android Studio config personal
+.idea/
+*.iml
+
+# Gradle cache
+.gradle/
+
+# Keystore (seguridad)
+*.jks
+*.keystore
