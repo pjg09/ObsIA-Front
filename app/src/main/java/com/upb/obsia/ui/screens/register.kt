@@ -173,7 +173,7 @@ fun RegisterScreen(navController: NavController) {
                         Button(
                                 onClick = {
                                         if (celularError == null && celular.isNotEmpty())
-                                                navController.navigate(NavRoutes.REGISTER_DETAILS)
+                                                navController.navigate(NavRoutes.LOGIN)
                                 },
                                 enabled = celularError == null && celular.isNotEmpty(),
                                 modifier = Modifier.fillMaxWidth().height(56.dp),
