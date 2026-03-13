@@ -5,6 +5,6 @@ import androidx.compose.runtime.Composable
 import androidx.navigation.NavController
 
 @Composable
-fun ChatScreenTypingScreen(navController: NavController) {
-    Text("Chat Screen Typing")
+fun ContactsScreen(navController: NavController) {
+    Text("Contacts Screen")
 }
