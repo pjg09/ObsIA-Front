@@ -1,5 +1,3 @@
-// app/src/main/java/com/upb/obsia/ui/screens/register.kt
-
 package com.upb.obsia.ui.screens
 
 import androidx.compose.foundation.background
@@ -8,27 +6,42 @@ import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.foundation.text.KeyboardOptions
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.automirrored.filled.ArrowBack
-import androidx.compose.material.icons.filled.VisibilityOff
 import androidx.compose.material3.*
 import androidx.compose.runtime.*
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
+import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.input.KeyboardType
-import androidx.compose.ui.text.input.PasswordVisualTransformation
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import androidx.navigation.NavController
 import com.upb.obsia.NavRoutes
+import com.upb.obsia.data.AppDatabase
+import com.upb.obsia.data.User
 import com.upb.obsia.ui.theme.*
+import kotlinx.coroutines.launch
+
+private fun isValidEmail(email: String): Boolean {
+        return android.util.Patterns.EMAIL_ADDRESS.matcher(email).matches()
+}
 
 @Composable
 fun RegisterScreen(navController: NavController) {
+        val context = LocalContext.current
+        val scope = rememberCoroutineScope()
+        val db = remember { AppDatabase.getInstance(context) }
+
         var nombre by remember { mutableStateOf("") }
         var email by remember { mutableStateOf("") }
         var celular by remember { mutableStateOf("") }
-        val celularError: String? =
+        var isLoading by remember { mutableStateOf(false) }
+
+        var emailError by remember { mutableStateOf<String?>(null) }
+        var celularError by remember { mutableStateOf<String?>(null) }
+
+        val celularFormatError: String? =
                 when {
                         celular.isEmpty() -> null
                         !celular.startsWith("3") -> "El celular debe comenzar por 3"
@@ -36,9 +49,21 @@ fun RegisterScreen(navController: NavController) {
                         else -> null
                 }
 
-        Column(modifier = Modifier.fillMaxSize().background(BlancoAuxiliar)) {
+        val emailFormatError: String? =
+                when {
+                        email.isEmpty() -> null
+                        !isValidEmail(email) -> "Ingresa un correo electrónico válido"
+                        else -> null
+                }
 
-                // Header teal
+        val formValid =
+                celularFormatError == null &&
+                        emailFormatError == null &&
+                        celular.isNotEmpty() &&
+                        email.isNotEmpty() &&
+                        nombre.isNotEmpty()
+
+        Column(modifier = Modifier.fillMaxSize().background(BlancoAuxiliar)) {
                 Box(
                         modifier =
                                 Modifier.fillMaxWidth()
@@ -80,7 +105,6 @@ fun RegisterScreen(navController: NavController) {
                         }
                 }
 
-                // Formulario
                 Column(
                         modifier =
                                 Modifier.fillMaxWidth()
@@ -105,13 +129,26 @@ fun RegisterScreen(navController: NavController) {
 
                         OutlinedTextField(
                                 value = email,
-                                onValueChange = { email = it },
+                                onValueChange = {
+                                        email = it
+                                        emailError = null
+                                },
                                 label = { Text("Ingresa tu correo electrónico") },
                                 placeholder = { Text("Ingresa tu correo electrónico") },
                                 modifier = Modifier.fillMaxWidth(),
                                 shape = RoundedCornerShape(32.dp),
                                 keyboardOptions =
                                         KeyboardOptions(keyboardType = KeyboardType.Email),
+                                isError = emailFormatError != null || emailError != null,
+                                supportingText = {
+                                        val msg = emailError ?: emailFormatError
+                                        if (msg != null) {
+                                                Text(
+                                                        text = msg,
+                                                        color = MaterialTheme.colorScheme.error
+                                                )
+                                        }
+                                },
                                 colors =
                                         OutlinedTextFieldDefaults.colors(
                                                 focusedBorderColor = FondoPrincipal,
@@ -124,8 +161,10 @@ fun RegisterScreen(navController: NavController) {
                         OutlinedTextField(
                                 value = celular,
                                 onValueChange = {
-                                        if (it.length <= 10 && it.all { c -> c.isDigit() })
+                                        if (it.length <= 10 && it.all { c -> c.isDigit() }) {
                                                 celular = it
+                                                celularError = null
+                                        }
                                 },
                                 label = { Text("Ingresa tu número de celular") },
                                 placeholder = { Text("Ingresa tu número de celular") },
@@ -133,22 +172,15 @@ fun RegisterScreen(navController: NavController) {
                                 shape = RoundedCornerShape(32.dp),
                                 keyboardOptions =
                                         KeyboardOptions(keyboardType = KeyboardType.Phone),
-                                visualTransformation = PasswordVisualTransformation(),
-                                isError = celularError != null,
+                                isError = celularFormatError != null || celularError != null,
                                 supportingText = {
-                                        if (celularError != null) {
+                                        val msg = celularError ?: celularFormatError
+                                        if (msg != null) {
                                                 Text(
-                                                        text = celularError,
+                                                        text = msg,
                                                         color = MaterialTheme.colorScheme.error
                                                 )
                                         }
-                                },
-                                trailingIcon = {
-                                        Icon(
-                                                imageVector = Icons.Default.VisibilityOff,
-                                                contentDescription = "Ocultar",
-                                                tint = LetrasNegras
-                                        )
                                 },
                                 colors =
                                         OutlinedTextFieldDefaults.colors(
@@ -162,7 +194,6 @@ fun RegisterScreen(navController: NavController) {
 
                 Spacer(modifier = Modifier.weight(1f))
 
-                // Botón y link
                 Column(
                         modifier =
                                 Modifier.fillMaxWidth()
@@ -172,21 +203,75 @@ fun RegisterScreen(navController: NavController) {
                 ) {
                         Button(
                                 onClick = {
-                                        if (celularError == null && celular.isNotEmpty())
-                                                navController.navigate(NavRoutes.LOGIN)
+                                        scope.launch {
+                                                isLoading = true
+                                                emailError = null
+                                                celularError = null
+                                                try {
+                                                        val porCelular =
+                                                                db.userDao().getByCelular(celular)
+                                                        val porEmail =
+                                                                db.userDao().getByEmail(email)
+                                                        when {
+                                                                porCelular != null ->
+                                                                        celularError =
+                                                                                "Este celular ya está registrado"
+                                                                porEmail != null ->
+                                                                        emailError =
+                                                                                "Este correo ya está registrado"
+                                                                else -> {
+                                                                        db.userDao()
+                                                                                .insert(
+                                                                                        User(
+                                                                                                nombre =
+                                                                                                        nombre,
+                                                                                                email =
+                                                                                                        email,
+                                                                                                celular =
+                                                                                                        celular
+                                                                                        )
+                                                                                )
+                                                                        navController.navigate(
+                                                                                NavRoutes.REGISTER
+                                                                        ) {
+                                                                                popUpTo(
+                                                                                        NavRoutes
+                                                                                                .REGISTER
+                                                                                ) {
+                                                                                        inclusive =
+                                                                                                true
+                                                                                }
+                                                                        }
+                                                                }
+                                                        }
+                                                } catch (e: Exception) {
+                                                        celularError =
+                                                                "Error al registrar. Intenta de nuevo."
+                                                } finally {
+                                                        isLoading = false
+                                                }
+                                        }
                                 },
-                                enabled = celularError == null && celular.isNotEmpty(),
+                                enabled = formValid && !isLoading,
                                 modifier = Modifier.fillMaxWidth().height(56.dp),
                                 shape = RoundedCornerShape(32.dp),
                                 colors =
                                         ButtonDefaults.buttonColors(containerColor = FondoPrincipal)
                         ) {
-                                Text(
-                                        text = "Registrarse",
-                                        fontSize = 16.sp,
-                                        fontWeight = FontWeight.Bold,
-                                        color = FondoBlanco
-                                )
+                                if (isLoading) {
+                                        CircularProgressIndicator(
+                                                color = FondoBlanco,
+                                                modifier = Modifier.size(24.dp),
+                                                strokeWidth = 2.dp
+                                        )
+                                } else {
+                                        Text(
+                                                text = "Registrarse",
+                                                fontSize = 16.sp,
+                                                fontWeight = FontWeight.Bold,
+                                                color = FondoBlanco
+                                        )
+                                }
                         }
 
                         Row {
