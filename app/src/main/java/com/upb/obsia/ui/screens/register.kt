@@ -19,6 +19,7 @@ import androidx.compose.ui.unit.sp
 import androidx.navigation.NavController
 import com.upb.obsia.NavRoutes
 import com.upb.obsia.data.AppDatabase
+import com.upb.obsia.data.ChatSession
 import com.upb.obsia.data.User
 import com.upb.obsia.ui.theme.*
 import kotlinx.coroutines.launch
@@ -220,27 +221,54 @@ fun RegisterScreen(navController: NavController) {
                                                                         emailError =
                                                                                 "Este correo ya está registrado"
                                                                 else -> {
-                                                                        db.userDao()
-                                                                                .insert(
-                                                                                        User(
-                                                                                                nombre =
-                                                                                                        nombre,
-                                                                                                email =
-                                                                                                        email,
-                                                                                                celular =
-                                                                                                        celular
-                                                                                        )
+                                                                        // Insertar usuario y
+                                                                        // obtener su ID generado
+                                                                        val newUser =
+                                                                                User(
+                                                                                        nombre =
+                                                                                                nombre,
+                                                                                        email =
+                                                                                                email,
+                                                                                        celular =
+                                                                                                celular
                                                                                 )
-                                                                        navController.navigate(
-                                                                                NavRoutes.REGISTER
-                                                                        ) {
-                                                                                popUpTo(
-                                                                                        NavRoutes
-                                                                                                .REGISTER
-                                                                                ) {
-                                                                                        inclusive =
-                                                                                                true
-                                                                                }
+                                                                        db.userDao().insert(newUser)
+                                                                        val insertedUser =
+                                                                                db.userDao()
+                                                                                        .getByCelular(
+                                                                                                celular
+                                                                                        )
+
+                                                                        if (insertedUser != null) {
+                                                                                // Crear sesión de
+                                                                                // prueba temporal
+                                                                                val testSession =
+                                                                                        ChatSession(
+                                                                                                userId =
+                                                                                                        insertedUser
+                                                                                                                .id,
+                                                                                                title =
+                                                                                                        "Sesión de prueba"
+                                                                                        )
+                                                                                val sessionId =
+                                                                                        db.chatSessionDao()
+                                                                                                .insert(
+                                                                                                        testSession
+                                                                                                )
+                                                                                                .toInt()
+
+                                                                                navController
+                                                                                        .navigate(
+                                                                                                "${NavRoutes.CHAT_SCREEN}/${insertedUser.id}/$sessionId/Prueba%201"
+                                                                                        ) {
+                                                                                                popUpTo(
+                                                                                                        NavRoutes
+                                                                                                                .REGISTER
+                                                                                                ) {
+                                                                                                        inclusive =
+                                                                                                                true
+                                                                                                }
+                                                                                        }
                                                                         }
                                                                 }
                                                         }
@@ -281,7 +309,7 @@ fun RegisterScreen(navController: NavController) {
                                         color = LetrasNegras
                                 )
                                 TextButton(
-                                        onClick = { navController.navigate(NavRoutes.LOGIN) },
+                                        onClick = { navController.navigate(NavRoutes.CHAT_SCREEN) },
                                         contentPadding = PaddingValues(0.dp)
                                 ) {
                                         Text(
