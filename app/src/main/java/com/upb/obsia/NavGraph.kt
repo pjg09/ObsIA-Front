@@ -16,7 +16,6 @@ import com.upb.obsia.ui.screens.ChatScreenTypingScreen
 import com.upb.obsia.ui.screens.ContactsScreen
 import com.upb.obsia.ui.screens.EditProfileScreen
 import com.upb.obsia.ui.screens.LogOutScreen
-import com.upb.obsia.ui.screens.LoginDetailsScreen
 import com.upb.obsia.ui.screens.LoginScreen
 import com.upb.obsia.ui.screens.OnboardingScreen
 import com.upb.obsia.ui.screens.RegisterScreen
@@ -30,7 +29,6 @@ fun NavGraph(navController: NavHostController) {
         composable(NavRoutes.ONBOARDING) { OnboardingScreen(navController) }
         composable(NavRoutes.REGISTER) { RegisterScreen(navController) }
         composable(NavRoutes.LOGIN) { LoginScreen(navController) }
-        composable(NavRoutes.LOGIN_DETAILS) { LoginDetailsScreen(navController) }
         composable(NavRoutes.CHAT_PAGE) { ChatPageScreen(navController) }
         composable(NavRoutes.CHAT_LIST) { ChatListScreen(navController) }
         composable(NavRoutes.CHAT_LIST_TAP) { ChatListTapScreen(navController) }

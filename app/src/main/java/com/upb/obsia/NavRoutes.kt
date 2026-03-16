@@ -6,7 +6,6 @@ object NavRoutes {
     const val ONBOARDING = "onboarding"
     const val REGISTER = "register"
     const val LOGIN = "login"
-    const val LOGIN_DETAILS = "login_details"
     const val CHAT_PAGE = "chat_page"
     const val CHAT_LIST = "chat_list"
     const val CHAT_LIST_TAP = "chat_list_tap"

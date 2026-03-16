@@ -83,11 +83,17 @@ fun RegisterScreen(navController: NavController) {
                                         )
                 ) {
                         Column {
-                                IconButton(onClick = { navController.popBackStack() }) {
+                                IconButton(
+                                        onClick = { navController.navigate(NavRoutes.ONBOARDING) },
+                                        modifier =
+                                                Modifier.size(48.dp)
+                                                        .offset(x = (-12).dp, y = (-8).dp)
+                                ) {
                                         Icon(
                                                 imageVector = Icons.AutoMirrored.Filled.ArrowBack,
                                                 contentDescription = "Volver",
-                                                tint = FondoBlanco
+                                                tint = FondoBlanco,
+                                                modifier = Modifier.size(38.dp)
                                         )
                                 }
                                 Spacer(modifier = Modifier.height(8.dp))
@@ -302,15 +308,16 @@ fun RegisterScreen(navController: NavController) {
                                 }
                         }
 
-                        Row {
+                        Row(verticalAlignment = Alignment.CenterVertically) {
                                 Text(
                                         text = "¿Ya tienes una cuenta? ",
                                         fontSize = 14.sp,
                                         color = LetrasNegras
                                 )
                                 TextButton(
-                                        onClick = { navController.navigate(NavRoutes.CHAT_SCREEN) },
-                                        contentPadding = PaddingValues(0.dp)
+                                        onClick = { navController.navigate(NavRoutes.LOGIN) },
+                                        contentPadding = PaddingValues(0.dp),
+                                        modifier = Modifier.height(20.dp)
                                 ) {
                                         Text(
                                                 text = "Iniciar sesión",
