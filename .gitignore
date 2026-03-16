@@ -139,3 +139,5 @@ app/build/
 # Keystore (seguridad)
 *.jks
 *.keystore
+
+*.gguf
