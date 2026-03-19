@@ -54,7 +54,7 @@ fun LoginScreen(navController: NavController) {
             Column {
                 IconButton(
                         onClick = {
-                            navController.navigate(NavRoutes.REGISTER) {
+                            navController.navigate(NavRoutes.ONBOARDING) {
                                 popUpTo(NavRoutes.LOGIN) { inclusive = true }
                             }
                         },
