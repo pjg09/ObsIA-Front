@@ -1,5 +1,3 @@
-// Ruta: app/src/main/java/com/upb/obsia/data/ChatMessageDao.kt
-
 package com.upb.obsia.data
 
 import androidx.room.Dao
@@ -20,4 +18,9 @@ interface ChatMessageDao {
 
     @Query("DELETE FROM chat_messages WHERE sessionId = :sessionId")
     suspend fun deleteBySession(sessionId: Int)
+
+    @Query(
+            "SELECT content FROM chat_messages WHERE sessionId = :sessionId ORDER BY createdAt DESC LIMIT 1"
+    )
+    suspend fun getLastMessageBySession(sessionId: Int): String?
 }

@@ -97,6 +97,7 @@ fun LoginScreen(navController: NavController) {
                     },
                     label = { Text("Celular") },
                     placeholder = { Text("Ingresa tu número") },
+                    prefix = { Text("+57  ") },
                     modifier = Modifier.fillMaxWidth(),
                     shape = RoundedCornerShape(32.dp),
                     keyboardOptions = KeyboardOptions(keyboardType = KeyboardType.Phone),
@@ -135,7 +136,7 @@ fun LoginScreen(navController: NavController) {
                                     celularError = "No existe una cuenta con este número"
                                 } else {
                                     SessionManager.saveUserId(context, user.id)
-                                    navController.navigate(NavRoutes.CHAT_PAGE) {
+                                    navController.navigate(NavRoutes.CHAT_LIST) {
                                         popUpTo(NavRoutes.LOGIN) { inclusive = true }
                                     }
                                 }

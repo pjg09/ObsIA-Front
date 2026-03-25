@@ -1,5 +1,3 @@
-// Ruta: app/src/main/java/com/upb/obsia/data/ChatSessionDao.kt
-
 package com.upb.obsia.data
 
 import androidx.room.Dao
@@ -22,4 +20,7 @@ interface ChatSessionDao {
     suspend fun getById(sessionId: Int): ChatSession?
 
     @Query("DELETE FROM chat_sessions WHERE id = :sessionId") suspend fun deleteById(sessionId: Int)
+
+    @Query("UPDATE chat_sessions SET title = :title, updatedAt = :updatedAt WHERE id = :sessionId")
+    suspend fun renameSession(sessionId: Int, title: String, updatedAt: Long)
 }

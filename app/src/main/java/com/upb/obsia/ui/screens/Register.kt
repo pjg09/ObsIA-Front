@@ -246,42 +246,35 @@ fun RegisterScreen(navController: NavController) {
                                                                                         )
 
                                                                         if (insertedUser != null) {
-                                                                                val insertedUser =
-                                                                                        db.userDao()
-                                                                                                .getByCelular(
-                                                                                                        celular
+                                                                                // Crear sesión de
+                                                                                // prueba temporal
+                                                                                val testSession =
+                                                                                        ChatSession(
+                                                                                                userId =
+                                                                                                        insertedUser
+                                                                                                                .id,
+                                                                                                title =
+                                                                                                        "Sesión de prueba"
+                                                                                        )
+                                                                                val sessionId =
+                                                                                        db.chatSessionDao()
+                                                                                                .insert(
+                                                                                                        testSession
                                                                                                 )
-                                                                                if (insertedUser !=
-                                                                                                null
-                                                                                ) {
-                                                                                        val testSession =
-                                                                                                ChatSession(
-                                                                                                        userId =
-                                                                                                                insertedUser
-                                                                                                                        .id,
-                                                                                                        title =
-                                                                                                                "Sesión de prueba"
-                                                                                                )
-                                                                                        val sessionId =
-                                                                                                db.chatSessionDao()
-                                                                                                        .insert(
-                                                                                                                testSession
-                                                                                                        )
-                                                                                                        .toInt()
-                                                                                        navController
-                                                                                                .navigate(
+                                                                                                .toInt()
+
+                                                                                navController
+                                                                                        .navigate(
+                                                                                                "${NavRoutes.CHAT_SCREEN}/${insertedUser.id}/$sessionId/Prueba%201"
+                                                                                        ) {
+                                                                                                popUpTo(
                                                                                                         NavRoutes
-                                                                                                                .LOGIN
+                                                                                                                .REGISTER
                                                                                                 ) {
-                                                                                                        popUpTo(
-                                                                                                                NavRoutes
-                                                                                                                        .REGISTER
-                                                                                                        ) {
-                                                                                                                inclusive =
-                                                                                                                        true
-                                                                                                        }
+                                                                                                        inclusive =
+                                                                                                                true
                                                                                                 }
-                                                                                }
+                                                                                        }
                                                                         }
                                                                 }
                                                         }
