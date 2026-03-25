@@ -8,6 +8,7 @@ import androidx.lifecycle.viewModelScope
 import com.obsIA.engine.NativeEngine
 import com.upb.obsia.data.AppDatabase
 import com.upb.obsia.data.ChatMessage
+import com.upb.obsia.data.SessionManager
 import java.io.File
 import java.io.FileOutputStream
 import kotlinx.coroutines.Dispatchers
@@ -44,28 +45,43 @@ class ChatViewModel : ViewModel() {
     private val _messages = MutableStateFlow<List<ChatMessage>>(emptyList())
     val messages: StateFlow<List<ChatMessage>> = _messages.asStateFlow()
 
-    // Mensaje de bienvenida hardcodeado — no se persiste en DB
+    // Nombre de la sesión resuelto desde la DB — la UI lo observa
+    private val _sessionName = MutableStateFlow("Chat")
+    val sessionName: StateFlow<String> = _sessionName.asStateFlow()
+
     val welcomeMessage = "¡Arro está aquí para ayudarte!"
 
     private var sessionId: Int = -1
     private var userId: Int = -1
 
     /**
-     * Punto de entrada. Debe llamarse una vez al abrir la pantalla. Copia assets si es necesario,
-     * inicializa el motor y carga historial.
+     * Punto de entrada. Resuelve userId desde SessionManager y sessionName desde la DB. Solo
+     * requiere sessionId desde la navegación.
      */
-    fun initialize(context: Context, userId: Int, sessionId: Int) {
-        this.userId = userId
+    fun initialize(context: Context, sessionId: Int) {
         this.sessionId = sessionId
+        this.userId = SessionManager.getUserId(context)
+
+        if (userId == -1) {
+            _initState.value = ChatInitState.Error("No hay sesión de usuario activa.")
+            return
+        }
 
         viewModelScope.launch {
             try {
-                // Paso 1: Copiar assets a filesDir si no existen ya
+                // Resolver nombre de la sesión desde la DB
+                val db = AppDatabase.getInstance(context)
+                withContext(Dispatchers.IO) { db.chatSessionDao().getById(sessionId) }?.let {
+                        session ->
+                    _sessionName.value = session.title
+                }
+
+                // Paso 1: Copiar assets si no existen
                 _initState.value = ChatInitState.CopyingAssets
                 val modelFile = copyAssetIfNeeded(context, "qwen-medicina-q2k.gguf")
                 val chunksFile = copyAssetIfNeeded(context, "chunks.json")
 
-                // Paso 2: Inicializar el motor JNI — bloqueante en IO
+                // Paso 2: Inicializar motor JNI
                 _initState.value = ChatInitState.Initializing
                 val result =
                         withContext(Dispatchers.IO) {
@@ -82,7 +98,7 @@ class ChatViewModel : ViewModel() {
                     return@launch
                 }
 
-                // Paso 3: Cargar historial de mensajes de la sesión actual
+                // Paso 3: Cargar historial
                 loadMessages(context)
 
                 _initState.value = ChatInitState.Ready
@@ -93,7 +109,6 @@ class ChatViewModel : ViewModel() {
         }
     }
 
-    /** Envía un mensaje del usuario al motor y persiste la conversación. */
     fun sendMessage(context: Context, text: String) {
         if (_initState.value !is ChatInitState.Ready) return
         if (_queryState.value is ChatQueryState.Loading) return
@@ -102,15 +117,11 @@ class ChatViewModel : ViewModel() {
         viewModelScope.launch {
             val db = AppDatabase.getInstance(context)
 
-            // Persistir mensaje del usuario
             val userMessage =
                     ChatMessage(sessionId = sessionId, role = "user", content = text.trim())
             val userMsgId = withContext(Dispatchers.IO) { db.chatMessageDao().insert(userMessage) }
-
-            // Actualizar lista local inmediatamente para UI responsiva
             _messages.value = _messages.value + userMessage.copy(id = userMsgId.toInt())
 
-            // Actualizar timestamp de la sesión
             withContext(Dispatchers.IO) {
                 val session = db.chatSessionDao().getById(sessionId)
                 session?.let {
@@ -118,18 +129,15 @@ class ChatViewModel : ViewModel() {
                 }
             }
 
-            // Llamar al motor — bloqueante
             _queryState.value = ChatQueryState.Loading
             try {
                 val rawJson = withContext(Dispatchers.IO) { engine.processQuery(text.trim()) }
-
                 val json = JSONObject(rawJson)
                 val status = json.optString("status")
 
                 if (status == "ok") {
                     val responseText = json.optString("response_text")
                     val processingMs = json.optLong("processing_ms")
-
                     val assistantMessage =
                             ChatMessage(
                                     sessionId = sessionId,
@@ -155,7 +163,6 @@ class ChatViewModel : ViewModel() {
         }
     }
 
-    /** Carga el historial de mensajes de la sesión desde Room. */
     private suspend fun loadMessages(context: Context) {
         val db = AppDatabase.getInstance(context)
         val history =
@@ -165,10 +172,6 @@ class ChatViewModel : ViewModel() {
         _messages.value = history
     }
 
-    /**
-     * Copia un archivo de assets a filesDir del dispositivo si no existe ya. Retorna el File
-     * resultante con ruta absoluta en el filesystem.
-     */
     private suspend fun copyAssetIfNeeded(context: Context, assetName: String): File {
         return withContext(Dispatchers.IO) {
             val destFile = File(context.filesDir, assetName)

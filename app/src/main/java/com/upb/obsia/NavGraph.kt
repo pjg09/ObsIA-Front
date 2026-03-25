@@ -8,7 +8,7 @@ import androidx.navigation.NavType
 import androidx.navigation.compose.NavHost
 import androidx.navigation.compose.composable
 import androidx.navigation.navArgument
-import com.upb.obsia.ui.screens.ChatPageScreen
+import com.upb.obsia.ui.screens.ChatList
 import com.upb.obsia.ui.screens.ChatScreen
 import com.upb.obsia.ui.screens.EditProfileScreen
 import com.upb.obsia.ui.screens.LogOutScreen
@@ -25,30 +25,28 @@ fun NavGraph(navController: NavHostController) {
         composable(NavRoutes.ONBOARDING) { OnboardingScreen(navController) }
         composable(NavRoutes.REGISTER) { RegisterScreen(navController) }
         composable(NavRoutes.LOGIN) { LoginScreen(navController) }
-        composable(NavRoutes.CHAT_PAGE) { ChatPageScreen(navController) }
         composable(NavRoutes.EDIT_PROFILE) { EditProfileScreen(navController) }
         composable(NavRoutes.SETTINGS) { SettingsScreen(navController) }
         composable(NavRoutes.LOG_OUT) { LogOutScreen(navController) }
 
-        // Ruta del chat con parámetros: /chat_screen/{userId}/{sessionId}/{sessionName}
-        composable(
-                route = "${NavRoutes.CHAT_SCREEN}/{userId}/{sessionId}/{sessionName}",
-                arguments =
-                        listOf(
-                                navArgument("userId") { type = NavType.IntType },
-                                navArgument("sessionId") { type = NavType.IntType },
-                                navArgument("sessionName") { type = NavType.StringType }
-                        )
-        ) { backStackEntry ->
-            val userId = backStackEntry.arguments?.getInt("userId") ?: 0
-            val sessionId = backStackEntry.arguments?.getInt("sessionId") ?: 0
-            val sessionName = backStackEntry.arguments?.getString("sessionName") ?: "Chat"
-            ChatScreen(
-                    sessionName = sessionName,
-                    userId = userId,
-                    sessionId = sessionId,
-                    onNavigateBack = { navController.popBackStack() }
+        composable(NavRoutes.CHAT_LIST) {
+            ChatList(
+                    onNavigateToChat = { sessionId ->
+                        navController.navigate("${NavRoutes.CHAT_SCREEN}/$sessionId")
+                    },
+                    onNavigateToSettings = { navController.navigate(NavRoutes.SETTINGS) }
             )
+        }
+
+        // Ruta simplificada — solo sessionId
+        // userId lo resuelve ChatViewModel desde SessionManager
+        // sessionName lo resuelve ChatViewModel desde la DB
+        composable(
+                route = "${NavRoutes.CHAT_SCREEN}/{sessionId}",
+                arguments = listOf(navArgument("sessionId") { type = NavType.IntType })
+        ) { backStackEntry ->
+            val sessionId = backStackEntry.arguments?.getInt("sessionId") ?: 0
+            ChatScreen(sessionId = sessionId, onNavigateBack = { navController.popBackStack() })
         }
     }
 }

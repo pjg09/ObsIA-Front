@@ -1,5 +1,3 @@
-// Ruta: app/src/main/java/com/upb/obsia/data/ChatMessage.kt
-
 package com.upb.obsia.data
 
 import androidx.room.Entity

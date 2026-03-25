@@ -1,4 +1,4 @@
-// Ruta: app/src/main/java/com/upb/obsia/ui/screens/chat_screen.kt
+// Ruta: app/src/main/java/com/upb/obsia/ui/screens/ChatScreen.kt
 
 package com.upb.obsia.ui.screens
 
@@ -78,172 +78,201 @@ import com.upb.obsia.ui.viewmodel.ChatViewModel
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
-fun ChatScreen(
-        sessionName: String,
-        userId: Int,
-        sessionId: Int,
-        onNavigateBack: () -> Unit,
-        viewModel: ChatViewModel = viewModel()
-) {
-    val context = LocalContext.current
-    val initState by viewModel.initState.collectAsState()
-    val queryState by viewModel.queryState.collectAsState()
-    val messages by viewModel.messages.collectAsState()
-    val listState = rememberLazyListState()
-    val keyboardController = LocalSoftwareKeyboardController.current
+fun ChatScreen(sessionId: Int, onNavigateBack: () -> Unit, viewModel: ChatViewModel = viewModel()) {
+        val context = LocalContext.current
+        val initState by viewModel.initState.collectAsState()
+        val queryState by viewModel.queryState.collectAsState()
+        val messages by viewModel.messages.collectAsState()
+        // sessionName se resuelve internamente en el ViewModel desde la DB
+        val sessionName by viewModel.sessionName.collectAsState()
+        val listState = rememberLazyListState()
+        val keyboardController = LocalSoftwareKeyboardController.current
 
-    var inputText by remember { mutableStateOf("") }
+        var inputText by remember { mutableStateOf("") }
 
-    // Inicializar motor al entrar a la pantalla
-    LaunchedEffect(Unit) { viewModel.initialize(context, userId, sessionId) }
+        // Solo necesita sessionId — userId y sessionName los resuelve el ViewModel
+        LaunchedEffect(Unit) { viewModel.initialize(context, sessionId) }
 
-    // Auto-scroll al último mensaje
-    LaunchedEffect(messages.size, queryState) {
-        if (messages.isNotEmpty()) {
-            listState.animateScrollToItem(
-                    index = messages.size + 1 // +1 por el mensaje de bienvenida
-            )
+        LaunchedEffect(messages.size, queryState) {
+                if (messages.isNotEmpty()) {
+                        listState.animateScrollToItem(index = messages.size + 1)
+                }
         }
-    }
 
-    Scaffold(
-            topBar = {
-                TopAppBar(
-                        title = {
-                            Column {
-                                Text(
-                                        text = "Arr\u00f3",
-                                        fontSize = 13.sp,
-                                        fontWeight = FontWeight.Bold,
-                                        color = Color.White
-                                )
-                                Text(
-                                        text = sessionName,
-                                        fontSize = 17.sp,
-                                        fontWeight = FontWeight.SemiBold,
-                                        color = Color.White
-                                )
-                            }
-                        },
-                        navigationIcon = {
-                            IconButton(onClick = onNavigateBack) {
-                                Icon(
-                                        imageVector = Icons.AutoMirrored.Filled.ArrowBack,
-                                        contentDescription = "Volver",
-                                        tint = Color.White
-                                )
-                            }
-                        },
-                        colors = TopAppBarDefaults.topAppBarColors(containerColor = FondoPrincipal)
-                )
-            },
-            bottomBar = {
-                ChatInputBar(
-                        inputText = inputText,
-                        onTextChange = { inputText = it },
-                        isEnabled =
-                                initState is ChatInitState.Ready &&
-                                        queryState !is ChatQueryState.Loading,
-                        onSend = {
-                            if (inputText.isNotBlank()) {
-                                viewModel.sendMessage(context, inputText)
-                                inputText = ""
-                                keyboardController?.hide()
-                            }
+        Scaffold(
+                topBar = {
+                        TopAppBar(
+                                title = {
+                                        Column {
+                                                Text(
+                                                        text = "Arrø",
+                                                        fontSize = 13.sp,
+                                                        fontWeight = FontWeight.Bold,
+                                                        color = Color.White
+                                                )
+                                                Text(
+                                                        text = sessionName,
+                                                        fontSize = 17.sp,
+                                                        fontWeight = FontWeight.SemiBold,
+                                                        color = Color.White
+                                                )
+                                        }
+                                },
+                                navigationIcon = {
+                                        IconButton(onClick = onNavigateBack) {
+                                                Icon(
+                                                        imageVector =
+                                                                Icons.AutoMirrored.Filled.ArrowBack,
+                                                        contentDescription = "Volver",
+                                                        tint = Color.White
+                                                )
+                                        }
+                                },
+                                colors =
+                                        TopAppBarDefaults.topAppBarColors(
+                                                containerColor = FondoPrincipal
+                                        )
+                        )
+                },
+                bottomBar = {
+                        ChatInputBar(
+                                inputText = inputText,
+                                onTextChange = { inputText = it },
+                                isEnabled =
+                                        initState is ChatInitState.Ready &&
+                                                queryState !is ChatQueryState.Loading,
+                                onSend = {
+                                        if (inputText.isNotBlank()) {
+                                                viewModel.sendMessage(context, inputText)
+                                                inputText = ""
+                                                keyboardController?.hide()
+                                        }
+                                }
+                        )
+                },
+                containerColor = FondoChat
+        ) { paddingValues ->
+                Box(modifier = Modifier.fillMaxSize().padding(paddingValues)) {
+                        when (val state = initState) {
+                                is ChatInitState.CopyingAssets ->
+                                        EngineLoadingOverlay(message = "Preparando modelo...")
+                                is ChatInitState.Initializing ->
+                                        EngineLoadingOverlay(message = "Inicializando motor...")
+                                is ChatInitState.Error ->
+                                        EngineErrorOverlay(message = state.message)
+                                is ChatInitState.Ready -> {
+                                        LazyColumn(
+                                                state = listState,
+                                                modifier =
+                                                        Modifier.fillMaxSize()
+                                                                .padding(horizontal = 16.dp),
+                                                verticalArrangement = Arrangement.spacedBy(8.dp)
+                                        ) {
+                                                item { Spacer(modifier = Modifier.size(12.dp)) }
+                                                item {
+                                                        AssistantBubble(
+                                                                text = viewModel.welcomeMessage
+                                                        )
+                                                }
+                                                items(messages) { message ->
+                                                        when (message.role) {
+                                                                "user" ->
+                                                                        UserBubble(
+                                                                                text =
+                                                                                        message.content
+                                                                        )
+                                                                "assistant" ->
+                                                                        AssistantBubble(
+                                                                                text =
+                                                                                        message.content
+                                                                        )
+                                                        }
+                                                }
+                                                item {
+                                                        AnimatedVisibility(
+                                                                visible =
+                                                                        queryState is
+                                                                                ChatQueryState.Loading,
+                                                                enter = fadeIn() + scaleIn(),
+                                                                exit = fadeOut()
+                                                        ) { TypingIndicator() }
+                                                }
+                                                if (queryState is ChatQueryState.Error) {
+                                                        item {
+                                                                val errorMsg =
+                                                                        (queryState as
+                                                                                        ChatQueryState.Error)
+                                                                                .message
+                                                                AssistantBubble(
+                                                                        text =
+                                                                                "Ocurrió un error: $errorMsg",
+                                                                        isError = true
+                                                                )
+                                                        }
+                                                }
+                                                item { Spacer(modifier = Modifier.size(8.dp)) }
+                                        }
+                                }
                         }
-                )
-            },
-            containerColor = FondoChat
-    ) { paddingValues ->
-        Box(modifier = Modifier.fillMaxSize().padding(paddingValues)) {
-            when (val state = initState) {
-                is ChatInitState.CopyingAssets -> {
-                    EngineLoadingOverlay(message = "Preparando modelo...")
                 }
-                is ChatInitState.Initializing -> {
-                    EngineLoadingOverlay(message = "Inicializando motor...")
-                }
-                is ChatInitState.Error -> {
-                    EngineErrorOverlay(message = state.message)
-                }
-                is ChatInitState.Ready -> {
-                    LazyColumn(
-                            state = listState,
-                            modifier = Modifier.fillMaxSize().padding(horizontal = 16.dp),
-                            verticalArrangement = Arrangement.spacedBy(8.dp)
-                    ) {
-                        // Espaciado superior
-                        item { Spacer(modifier = Modifier.size(12.dp)) }
-
-                        // Mensaje de bienvenida hardcodeado
-                        item { AssistantBubble(text = viewModel.welcomeMessage) }
-
-                        // Historial de mensajes persistidos
-                        items(messages) { message ->
-                            when (message.role) {
-                                "user" -> UserBubble(text = message.content)
-                                "assistant" -> AssistantBubble(text = message.content)
-                            }
-                        }
-
-                        // Indicador de escritura
-                        item {
-                            AnimatedVisibility(
-                                    visible = queryState is ChatQueryState.Loading,
-                                    enter = fadeIn() + scaleIn(),
-                                    exit = fadeOut()
-                            ) { TypingIndicator() }
-                        }
-
-                        // Error de query
-                        if (queryState is ChatQueryState.Error) {
-                            item {
-                                val errorMsg = (queryState as ChatQueryState.Error).message
-                                AssistantBubble(
-                                        text = "Ocurrió un error: $errorMsg",
-                                        isError = true
-                                )
-                            }
-                        }
-
-                        // Espaciado inferior
-                        item { Spacer(modifier = Modifier.size(8.dp)) }
-                    }
-                }
-            }
         }
-    }
 }
-
-// Burbujas de mensaje
 
 @Composable
 private fun UserBubble(text: String) {
-    Row(modifier = Modifier.fillMaxWidth(), horizontalArrangement = Arrangement.End) {
-        Box(
-                modifier =
-                        Modifier.widthIn(max = 280.dp)
-                                .clip(
-                                        RoundedCornerShape(
-                                                topStart = 18.dp,
-                                                topEnd = 18.dp,
-                                                bottomStart = 18.dp,
-                                                bottomEnd = 4.dp
+        Row(modifier = Modifier.fillMaxWidth(), horizontalArrangement = Arrangement.End) {
+                Box(
+                        modifier =
+                                Modifier.widthIn(max = 280.dp)
+                                        .clip(
+                                                RoundedCornerShape(
+                                                        topStart = 18.dp,
+                                                        topEnd = 18.dp,
+                                                        bottomStart = 18.dp,
+                                                        bottomEnd = 4.dp
+                                                )
                                         )
-                                )
-                                .background(MensajesUsuario)
-                                .padding(horizontal = 14.dp, vertical = 10.dp)
-        ) { Text(text = text, color = Color.White, fontSize = 15.sp, lineHeight = 22.sp) }
-    }
+                                        .background(MensajesUsuario)
+                                        .padding(horizontal = 14.dp, vertical = 10.dp)
+                ) { Text(text = text, color = Color.White, fontSize = 15.sp, lineHeight = 22.sp) }
+        }
 }
 
 @Composable
 private fun AssistantBubble(text: String, isError: Boolean = false) {
-    Row(modifier = Modifier.fillMaxWidth(), horizontalArrangement = Arrangement.Start) {
-        Box(
+        Row(modifier = Modifier.fillMaxWidth(), horizontalArrangement = Arrangement.Start) {
+                Box(
+                        modifier =
+                                Modifier.widthIn(max = 280.dp)
+                                        .clip(
+                                                RoundedCornerShape(
+                                                        topStart = 4.dp,
+                                                        topEnd = 18.dp,
+                                                        bottomStart = 18.dp,
+                                                        bottomEnd = 18.dp
+                                                )
+                                        )
+                                        .background(
+                                                if (isError) Color(0xFFFFE0E0) else AzulAuxiliarChat
+                                        )
+                                        .padding(horizontal = 14.dp, vertical = 10.dp)
+                ) {
+                        Text(
+                                text = text,
+                                color = if (isError) Color(0xFFB00020) else LetrasNegras,
+                                fontSize = 15.sp,
+                                lineHeight = 22.sp
+                        )
+                }
+        }
+}
+
+@Composable
+private fun TypingIndicator() {
+        val infiniteTransition = rememberInfiniteTransition(label = "typing")
+        Row(
                 modifier =
-                        Modifier.widthIn(max = 280.dp)
-                                .clip(
+                        Modifier.clip(
                                         RoundedCornerShape(
                                                 topStart = 4.dp,
                                                 topEnd = 18.dp,
@@ -251,68 +280,37 @@ private fun AssistantBubble(text: String, isError: Boolean = false) {
                                                 bottomEnd = 18.dp
                                         )
                                 )
-                                .background(if (isError) Color(0xFFFFE0E0) else AzulAuxiliarChat)
-                                .padding(horizontal = 14.dp, vertical = 10.dp)
+                                .background(AzulAuxiliarChat)
+                                .padding(horizontal = 16.dp, vertical = 12.dp),
+                horizontalArrangement = Arrangement.spacedBy(5.dp),
+                verticalAlignment = Alignment.CenterVertically
         ) {
-            Text(
-                    text = text,
-                    color = if (isError) Color(0xFFB00020) else LetrasNegras,
-                    fontSize = 15.sp,
-                    lineHeight = 22.sp
-            )
+                repeat(3) { index ->
+                        val alpha by
+                                infiniteTransition.animateFloat(
+                                        initialValue = 0.3f,
+                                        targetValue = 1f,
+                                        animationSpec =
+                                                infiniteRepeatable(
+                                                        animation =
+                                                                tween(
+                                                                        durationMillis = 500,
+                                                                        delayMillis = index * 150,
+                                                                        easing = LinearEasing
+                                                                ),
+                                                        repeatMode = RepeatMode.Reverse
+                                                ),
+                                        label = "dot_$index"
+                                )
+                        Box(
+                                modifier =
+                                        Modifier.size(8.dp)
+                                                .clip(CircleShape)
+                                                .background(LetrasNegras80.copy(alpha = alpha))
+                        )
+                }
         }
-    }
 }
-
-// Indicador de escritura animado
-
-@Composable
-private fun TypingIndicator() {
-    val infiniteTransition = rememberInfiniteTransition(label = "typing")
-
-    Row(
-            modifier =
-                    Modifier.clip(
-                                    RoundedCornerShape(
-                                            topStart = 4.dp,
-                                            topEnd = 18.dp,
-                                            bottomStart = 18.dp,
-                                            bottomEnd = 18.dp
-                                    )
-                            )
-                            .background(AzulAuxiliarChat)
-                            .padding(horizontal = 16.dp, vertical = 12.dp),
-            horizontalArrangement = Arrangement.spacedBy(5.dp),
-            verticalAlignment = Alignment.CenterVertically
-    ) {
-        repeat(3) { index ->
-            val alpha by
-                    infiniteTransition.animateFloat(
-                            initialValue = 0.3f,
-                            targetValue = 1f,
-                            animationSpec =
-                                    infiniteRepeatable(
-                                            animation =
-                                                    tween(
-                                                            durationMillis = 500,
-                                                            delayMillis = index * 150,
-                                                            easing = LinearEasing
-                                                    ),
-                                            repeatMode = RepeatMode.Reverse
-                                    ),
-                            label = "dot_$index"
-                    )
-            Box(
-                    modifier =
-                            Modifier.size(8.dp)
-                                    .clip(CircleShape)
-                                    .background(LetrasNegras80.copy(alpha = alpha))
-            )
-        }
-    }
-}
-
-// Barra de input inferior
 
 @Composable
 private fun ChatInputBar(
@@ -321,114 +319,120 @@ private fun ChatInputBar(
         isEnabled: Boolean,
         onSend: () -> Unit
 ) {
-    Row(
-            modifier =
-                    Modifier.fillMaxWidth()
-                            .background(Color.White)
-                            .navigationBarsPadding()
-                            .imePadding()
-                            .padding(horizontal = 16.dp, vertical = 10.dp),
-            verticalAlignment = Alignment.CenterVertically
-    ) {
-        TextField(
-                value = inputText,
-                onValueChange = onTextChange,
-                modifier = Modifier.weight(1f),
-                enabled = isEnabled,
-                placeholder = {
-                    Text(
-                            text = "Escribe tu pregunta al chatbot",
-                            color = LetrasNegras80,
-                            fontSize = 14.sp
-                    )
-                },
-                shape = RoundedCornerShape(24.dp),
-                colors =
-                        TextFieldDefaults.colors(
-                                focusedContainerColor = FondoChat,
-                                unfocusedContainerColor = FondoChat,
-                                disabledContainerColor = FondoChat,
-                                focusedIndicatorColor = Color.Transparent,
-                                unfocusedIndicatorColor = Color.Transparent,
-                                disabledIndicatorColor = Color.Transparent,
-                                focusedTextColor = LetrasNegras,
-                                unfocusedTextColor = LetrasNegras
-                        ),
-                keyboardOptions =
-                        KeyboardOptions(
-                                capitalization = KeyboardCapitalization.Sentences,
-                                imeAction = ImeAction.Send
-                        ),
-                keyboardActions = KeyboardActions(onSend = { onSend() }),
-                singleLine = false,
-                maxLines = 4
-        )
-
-        Spacer(modifier = Modifier.width(10.dp))
-
-        // Micrófono cuando no hay texto, enviar cuando hay texto
-        Box(
-                modifier = Modifier.size(50.dp).clip(CircleShape).background(FondoPrincipal),
-                contentAlignment = Alignment.Center
+        Row(
+                modifier =
+                        Modifier.fillMaxWidth()
+                                .background(Color.White)
+                                .navigationBarsPadding()
+                                .imePadding()
+                                .padding(horizontal = 16.dp, vertical = 10.dp),
+                verticalAlignment = Alignment.CenterVertically
         ) {
-            if (inputText.isBlank()) {
-                IconButton(onClick = { /* TODO: reconocimiento de voz */}, enabled = isEnabled) {
-                    Icon(
-                            imageVector = Icons.Default.Mic,
-                            contentDescription = "Micrófono",
-                            tint = Color.White,
-                            modifier = Modifier.size(24.dp)
-                    )
-                }
-            } else {
-                IconButton(onClick = onSend, enabled = isEnabled) {
-                    Icon(
-                            imageVector = Icons.AutoMirrored.Filled.Send,
-                            contentDescription = "Enviar",
-                            tint = Color.White,
-                            modifier = Modifier.size(24.dp)
-                    )
-                }
-            }
-        }
-    }
-}
+                TextField(
+                        value = inputText,
+                        onValueChange = onTextChange,
+                        modifier = Modifier.weight(1f),
+                        enabled = isEnabled,
+                        placeholder = {
+                                Text(
+                                        text = "Escribe tu pregunta al chatbot",
+                                        color = LetrasNegras80,
+                                        fontSize = 14.sp
+                                )
+                        },
+                        shape = RoundedCornerShape(24.dp),
+                        colors =
+                                TextFieldDefaults.colors(
+                                        focusedContainerColor = FondoChat,
+                                        unfocusedContainerColor = FondoChat,
+                                        disabledContainerColor = FondoChat,
+                                        focusedIndicatorColor = Color.Transparent,
+                                        unfocusedIndicatorColor = Color.Transparent,
+                                        disabledIndicatorColor = Color.Transparent,
+                                        focusedTextColor = LetrasNegras,
+                                        unfocusedTextColor = LetrasNegras
+                                ),
+                        keyboardOptions =
+                                KeyboardOptions(
+                                        capitalization = KeyboardCapitalization.Sentences,
+                                        imeAction = ImeAction.Send
+                                ),
+                        keyboardActions = KeyboardActions(onSend = { onSend() }),
+                        singleLine = false,
+                        maxLines = 4
+                )
 
-// Estados de carga y error del motor
+                Spacer(modifier = Modifier.width(10.dp))
+
+                Box(
+                        modifier =
+                                Modifier.size(50.dp).clip(CircleShape).background(FondoPrincipal),
+                        contentAlignment = Alignment.Center
+                ) {
+                        if (inputText.isBlank()) {
+                                IconButton(onClick = { /* TODO: voz */}, enabled = isEnabled) {
+                                        Icon(
+                                                imageVector = Icons.Default.Mic,
+                                                contentDescription = "Micrófono",
+                                                tint = Color.White,
+                                                modifier = Modifier.size(24.dp)
+                                        )
+                                }
+                        } else {
+                                IconButton(onClick = onSend, enabled = isEnabled) {
+                                        Icon(
+                                                imageVector = Icons.AutoMirrored.Filled.Send,
+                                                contentDescription = "Enviar",
+                                                tint = Color.White,
+                                                modifier = Modifier.size(24.dp)
+                                        )
+                                }
+                        }
+                }
+        }
+}
 
 @Composable
 private fun EngineLoadingOverlay(message: String) {
-    Box(modifier = Modifier.fillMaxSize(), contentAlignment = Alignment.Center) {
-        Column(
-                horizontalAlignment = Alignment.CenterHorizontally,
-                verticalArrangement = Arrangement.spacedBy(16.dp)
-        ) {
-            CircularProgressIndicator(color = FondoPrincipal, modifier = Modifier.size(48.dp))
-            Text(
-                    text = message,
-                    color = LetrasNegras80,
-                    fontSize = 15.sp,
-                    fontWeight = FontWeight.Medium
-            )
+        Box(modifier = Modifier.fillMaxSize(), contentAlignment = Alignment.Center) {
+                Column(
+                        horizontalAlignment = Alignment.CenterHorizontally,
+                        verticalArrangement = Arrangement.spacedBy(16.dp)
+                ) {
+                        CircularProgressIndicator(
+                                color = FondoPrincipal,
+                                modifier = Modifier.size(48.dp)
+                        )
+                        Text(
+                                text = message,
+                                color = LetrasNegras80,
+                                fontSize = 15.sp,
+                                fontWeight = FontWeight.Medium
+                        )
+                }
         }
-    }
 }
 
 @Composable
 private fun EngineErrorOverlay(message: String) {
-    Box(modifier = Modifier.fillMaxSize(), contentAlignment = Alignment.Center) {
-        Column(
-                modifier = Modifier.padding(32.dp),
-                horizontalAlignment = Alignment.CenterHorizontally,
-                verticalArrangement = Arrangement.spacedBy(12.dp)
-        ) {
-            Text(
-                    text = "Error al inicializar el motor",
-                    color = LetrasNegras,
-                    fontSize = 17.sp,
-                    fontWeight = FontWeight.SemiBold
-            )
-            Text(text = message, color = LetrasNegras80, fontSize = 14.sp, lineHeight = 20.sp)
+        Box(modifier = Modifier.fillMaxSize(), contentAlignment = Alignment.Center) {
+                Column(
+                        modifier = Modifier.padding(32.dp),
+                        horizontalAlignment = Alignment.CenterHorizontally,
+                        verticalArrangement = Arrangement.spacedBy(12.dp)
+                ) {
+                        Text(
+                                text = "Error al inicializar el motor",
+                                color = LetrasNegras,
+                                fontSize = 17.sp,
+                                fontWeight = FontWeight.SemiBold
+                        )
+                        Text(
+                                text = message,
+                                color = LetrasNegras80,
+                                fontSize = 14.sp,
+                                lineHeight = 20.sp
+                        )
+                }
         }
-    }
 }
