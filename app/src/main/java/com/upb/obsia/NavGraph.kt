@@ -11,7 +11,6 @@ import androidx.navigation.navArgument
 import com.upb.obsia.ui.screens.ChatList
 import com.upb.obsia.ui.screens.ChatScreen
 import com.upb.obsia.ui.screens.EditProfileScreen
-import com.upb.obsia.ui.screens.LogOutScreen
 import com.upb.obsia.ui.screens.LoginScreen
 import com.upb.obsia.ui.screens.OnboardingScreen
 import com.upb.obsia.ui.screens.RegisterScreen
@@ -27,7 +26,6 @@ fun NavGraph(navController: NavHostController) {
         composable(NavRoutes.LOGIN) { LoginScreen(navController) }
         composable(NavRoutes.EDIT_PROFILE) { EditProfileScreen(navController) }
         composable(NavRoutes.SETTINGS) { SettingsScreen(navController) }
-        composable(NavRoutes.LOG_OUT) { LogOutScreen(navController) }
 
         composable(NavRoutes.CHAT_LIST) {
             ChatList(
@@ -39,7 +37,7 @@ fun NavGraph(navController: NavHostController) {
         }
 
         // Ruta simplificada — solo sessionId
-            // userId lo resuelve ChatViewModel desde AuthPreferences
+        // userId lo resuelve ChatViewModel desde AuthPreferences
         // sessionName lo resuelve ChatViewModel desde la DB
         composable(
                 route = "${NavRoutes.CHAT_SCREEN}/{sessionId}",
