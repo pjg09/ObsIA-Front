@@ -23,4 +23,9 @@ interface ChatSessionDao {
 
     @Query("UPDATE chat_sessions SET title = :title, updatedAt = :updatedAt WHERE id = :sessionId")
     suspend fun renameSession(sessionId: Int, title: String, updatedAt: Long)
+
+    @Query(
+            "SELECT content FROM chat_messages WHERE sessionId = :sessionId ORDER BY createdAt DESC LIMIT 1"
+    )
+    suspend fun getLastMessageBySession(sessionId: Int): String?
 }

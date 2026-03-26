@@ -48,7 +48,7 @@ class ChatListViewModel : ViewModel() {
 
     /**
      * Inicia la observación de sesiones del usuario autenticado. Debe llamarse una vez al entrar a
-     * ChatList.
+     * ChatPage.
      */
     @OptIn(ExperimentalCoroutinesApi::class)
     fun loadSessions(context: Context) {
@@ -112,6 +112,17 @@ class ChatListViewModel : ViewModel() {
         }
     }
 
+    fun deleteSession(context: Context, session: ChatSession) {
+        viewModelScope.launch {
+            try {
+                val db = AppDatabase.getInstance(context)
+                withContext(Dispatchers.IO) { db.chatSessionDao().deleteById(session.id) }
+            } catch (e: Exception) {
+                _errorMessage.value = "No se pudo eliminar la conversación."
+            }
+        }
+    }
+
     /**
      * Crea una nueva sesión con título por defecto y emite su id para que NavGraph navegue a
      * ChatScreen.
@@ -136,17 +147,6 @@ class ChatListViewModel : ViewModel() {
                 _newSessionId.value = id.toInt()
             } catch (e: Exception) {
                 _errorMessage.value = "No se pudo crear la conversación."
-            }
-        }
-    }
-
-    fun deleteSession(context: Context, session: ChatSession) {
-        viewModelScope.launch {
-            try {
-                val db = AppDatabase.getInstance(context)
-                withContext(Dispatchers.IO) { db.chatSessionDao().deleteById(session.id) }
-            } catch (e: Exception) {
-                _errorMessage.value = "No se pudo eliminar la conversación."
             }
         }
     }
