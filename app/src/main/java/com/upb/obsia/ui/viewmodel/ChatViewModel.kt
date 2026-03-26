@@ -8,7 +8,7 @@ import androidx.lifecycle.viewModelScope
 import com.obsIA.engine.NativeEngine
 import com.upb.obsia.data.AppDatabase
 import com.upb.obsia.data.ChatMessage
-import com.upb.obsia.data.SessionManager
+import com.upb.obsia.data.AuthPreferences
 import java.io.File
 import java.io.FileOutputStream
 import kotlinx.coroutines.Dispatchers
@@ -55,12 +55,12 @@ class ChatViewModel : ViewModel() {
     private var userId: Int = -1
 
     /**
-     * Punto de entrada. Resuelve userId desde SessionManager y sessionName desde la DB. Solo
+     * Punto de entrada. Resuelve userId desde AuthPreferences y sessionName desde la DB. Solo
      * requiere sessionId desde la navegación.
      */
     fun initialize(context: Context, sessionId: Int) {
         this.sessionId = sessionId
-        this.userId = SessionManager.getUserId(context)
+        this.userId = AuthPreferences.getUserId(context)
 
         if (userId == -1) {
             _initState.value = ChatInitState.Error("No hay sesión de usuario activa.")
