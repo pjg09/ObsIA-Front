@@ -39,7 +39,7 @@ fun NavGraph(navController: NavHostController) {
         }
 
         // Ruta simplificada — solo sessionId
-        // userId lo resuelve ChatViewModel desde SessionManager
+            // userId lo resuelve ChatViewModel desde AuthPreferences
         // sessionName lo resuelve ChatViewModel desde la DB
         composable(
                 route = "${NavRoutes.CHAT_SCREEN}/{sessionId}",

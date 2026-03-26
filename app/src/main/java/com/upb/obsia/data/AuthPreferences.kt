@@ -2,7 +2,7 @@ package com.upb.obsia.data
 
 import android.content.Context
 
-object SessionManager {
+object AuthPreferences {
     private const val PREFS_NAME = "obsia_prefs"
     private const val KEY_USER_ID = "user_id"
 

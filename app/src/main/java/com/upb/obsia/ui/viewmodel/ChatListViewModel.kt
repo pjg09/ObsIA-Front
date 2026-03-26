@@ -7,7 +7,7 @@ import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
 import com.upb.obsia.data.AppDatabase
 import com.upb.obsia.data.ChatSession
-import com.upb.obsia.data.SessionManager
+import com.upb.obsia.data.AuthPreferences
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.ExperimentalCoroutinesApi
 import kotlinx.coroutines.flow.MutableStateFlow
@@ -52,7 +52,7 @@ class ChatListViewModel : ViewModel() {
      */
     @OptIn(ExperimentalCoroutinesApi::class)
     fun loadSessions(context: Context) {
-        val userId = SessionManager.getUserId(context)
+        val userId = AuthPreferences.getUserId(context)
         if (userId == -1) {
             _errorMessage.value = "No hay sesión activa."
             return
@@ -128,7 +128,7 @@ class ChatListViewModel : ViewModel() {
      * ChatScreen.
      */
     fun createNewSession(context: Context) {
-        val userId = SessionManager.getUserId(context)
+        val userId = AuthPreferences.getUserId(context)
         if (userId == -1) {
             _errorMessage.value = "No hay sesión activa."
             return

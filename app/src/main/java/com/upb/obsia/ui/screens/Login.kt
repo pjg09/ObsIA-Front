@@ -19,7 +19,7 @@ import androidx.compose.ui.unit.sp
 import androidx.navigation.NavController
 import com.upb.obsia.NavRoutes
 import com.upb.obsia.data.AppDatabase
-import com.upb.obsia.data.SessionManager
+import com.upb.obsia.data.AuthPreferences
 import com.upb.obsia.ui.theme.*
 import kotlinx.coroutines.launch
 
@@ -135,7 +135,7 @@ fun LoginScreen(navController: NavController) {
                                 if (user == null) {
                                     celularError = "No existe una cuenta con este número"
                                 } else {
-                                    SessionManager.saveUserId(context, user.id)
+                                    AuthPreferences.saveUserId(context, user.id)
                                     navController.navigate(NavRoutes.CHAT_LIST) {
                                         popUpTo(NavRoutes.LOGIN) { inclusive = true }
                                     }
