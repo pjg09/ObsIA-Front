@@ -105,12 +105,6 @@ fun ChatScreen(sessionId: Int, onNavigateBack: () -> Unit, viewModel: ChatViewMo
                                 title = {
                                         Column {
                                                 Text(
-                                                        text = "Arrø",
-                                                        fontSize = 13.sp,
-                                                        fontWeight = FontWeight.Bold,
-                                                        color = Color.White
-                                                )
-                                                Text(
                                                         text = sessionName,
                                                         fontSize = 17.sp,
                                                         fontWeight = FontWeight.SemiBold,

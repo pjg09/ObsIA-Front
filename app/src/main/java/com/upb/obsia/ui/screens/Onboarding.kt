@@ -58,7 +58,7 @@ fun OnboardingScreen(navController: NavController) {
                 ) {
                         Button(
                                 onClick = {
-                                        navController.navigate(NavRoutes.REGISTER) {
+                                        navController.navigate(NavRoutes.LOGIN) {
                                                 popUpTo(NavRoutes.ONBOARDING) { inclusive = true }
                                         }
                                 },

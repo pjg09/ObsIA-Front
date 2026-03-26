@@ -265,7 +265,7 @@ fun RegisterScreen(navController: NavController) {
 
                                                                                 navController
                                                                                         .navigate(
-                                                                                                "${NavRoutes.CHAT_SCREEN}/${insertedUser.id}/$sessionId/Prueba%201"
+                                                                                                "${NavRoutes.CHAT_SCREEN}/$sessionId"
                                                                                         ) {
                                                                                                 popUpTo(
                                                                                                         NavRoutes
