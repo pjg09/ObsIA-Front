@@ -227,8 +227,7 @@ fun RegisterScreen(navController: NavController) {
                                                                         emailError =
                                                                                 "Este correo ya está registrado"
                                                                 else -> {
-                                                                        // Insertar usuario y
-                                                                        // obtener su ID generado
+                                                                        // Insertar usuario
                                                                         val newUser =
                                                                                 User(
                                                                                         nombre =
@@ -239,43 +238,17 @@ fun RegisterScreen(navController: NavController) {
                                                                                                 celular
                                                                                 )
                                                                         db.userDao().insert(newUser)
-                                                                        val insertedUser =
-                                                                                db.userDao()
-                                                                                        .getByCelular(
-                                                                                                celular
-                                                                                        )
 
-                                                                        if (insertedUser != null) {
-                                                                                // Crear sesión de
-                                                                                // prueba temporal
-                                                                                val testSession =
-                                                                                        ChatSession(
-                                                                                                userId =
-                                                                                                        insertedUser
-                                                                                                                .id,
-                                                                                                title =
-                                                                                                        "Sesión de prueba"
-                                                                                        )
-                                                                                val sessionId =
-                                                                                        db.chatSessionDao()
-                                                                                                .insert(
-                                                                                                        testSession
-                                                                                                )
-                                                                                                .toInt()
-
-                                                                                navController
-                                                                                        .navigate(
-                                                                                                "${NavRoutes.CHAT_SCREEN}/$sessionId"
+                                                                        navController
+                                                                                .navigate(NavRoutes.LOGIN) {
+                                                                                        popUpTo(
+                                                                                                NavRoutes
+                                                                                                        .REGISTER
                                                                                         ) {
-                                                                                                popUpTo(
-                                                                                                        NavRoutes
-                                                                                                                .REGISTER
-                                                                                                ) {
-                                                                                                        inclusive =
-                                                                                                                true
-                                                                                                }
+                                                                                                inclusive =
+                                                                                                        true
                                                                                         }
-                                                                        }
+                                                                                }
                                                                 }
                                                         }
                                                 } catch (e: Exception) {
