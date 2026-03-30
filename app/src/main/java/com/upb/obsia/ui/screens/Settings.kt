@@ -21,44 +21,47 @@ import androidx.compose.ui.unit.sp
 import androidx.lifecycle.viewmodel.compose.viewModel
 import androidx.navigation.NavController
 import com.upb.obsia.NavRoutes
-import com.upb.obsia.data.SessionManager
+import com.upb.obsia.data.AuthPreferences
 import com.upb.obsia.ui.theme.*
 import com.upb.obsia.ui.viewmodel.SettingsViewModel
 
 @Composable
 fun SettingsScreen(
-    navController: NavController,
-    settingsViewModel: SettingsViewModel = viewModel()
+        navController: NavController,
+        settingsViewModel: SettingsViewModel = viewModel()
 ) {
     val context = LocalContext.current
     val user by settingsViewModel.user.collectAsState()
     var showLogoutDialog by remember { mutableStateOf(false) }
 
-    LaunchedEffect(Unit) {
-        settingsViewModel.loadUser(context)
-    }
+    LaunchedEffect(Unit) { settingsViewModel.loadUser(context) }
 
-    Scaffold(
-        bottomBar = { BottomNavBar(navController) }
-    ) { paddingValues ->
+    Scaffold(bottomBar = { BottomNavBar(navController) }) { paddingValues ->
         Column(
-            modifier = Modifier
-                .fillMaxSize()
-                .background(BlancoAuxiliar)
-                .padding(paddingValues)
+                modifier = Modifier.fillMaxSize().background(BlancoAuxiliar).padding(paddingValues)
         ) {
             Box(
-                modifier = Modifier
-                    .fillMaxWidth()
-                    .clip(RoundedCornerShape(bottomStart = 32.dp, bottomEnd = 32.dp))
-                    .background(FondoPrincipal)
-                    .padding(start = 24.dp, end = 24.dp, top = 36.dp, bottom = 32.dp)
+                    modifier =
+                            Modifier.fillMaxWidth()
+                                    .clip(
+                                            RoundedCornerShape(
+                                                    bottomStart = 32.dp,
+                                                    bottomEnd = 32.dp
+                                            )
+                                    )
+                                    .background(FondoPrincipal)
+                                    .padding(
+                                            start = 24.dp,
+                                            end = 24.dp,
+                                            top = 36.dp,
+                                            bottom = 32.dp
+                                    )
             ) {
                 Text(
-                    text = "Configuración",
-                    fontSize = 30.sp,
-                    fontWeight = FontWeight.Bold,
-                    color = FondoBlanco
+                        text = "Configuración",
+                        fontSize = 30.sp,
+                        fontWeight = FontWeight.Bold,
+                        color = FondoBlanco
                 )
             }
 
@@ -66,31 +69,28 @@ fun SettingsScreen(
 
             // Tarjeta de usuario
             Card(
-                modifier = Modifier
-                    .fillMaxWidth()
-                    .padding(horizontal = 24.dp),
-                shape = RoundedCornerShape(16.dp),
-                colors = CardDefaults.cardColors(containerColor = FondoBlanco),
-                elevation = CardDefaults.cardElevation(defaultElevation = 2.dp)
+                    modifier = Modifier.fillMaxWidth().padding(horizontal = 24.dp),
+                    shape = RoundedCornerShape(16.dp),
+                    colors = CardDefaults.cardColors(containerColor = FondoBlanco),
+                    elevation = CardDefaults.cardElevation(defaultElevation = 2.dp)
             ) {
                 Row(
-                    modifier = Modifier
-                        .fillMaxWidth()
-                        .padding(16.dp),
-                    verticalAlignment = Alignment.CenterVertically
+                        modifier = Modifier.fillMaxWidth().padding(16.dp),
+                        verticalAlignment = Alignment.CenterVertically
                 ) {
                     Box(
-                        modifier = Modifier
-                            .size(48.dp)
-                            .clip(CircleShape)
-                            .background(FondoPrincipal),
-                        contentAlignment = Alignment.Center
+                            modifier =
+                                    Modifier.size(48.dp)
+                                            .clip(CircleShape)
+                                            .background(FondoPrincipal),
+                            contentAlignment = Alignment.Center
                     ) {
                         Text(
-                            text = user?.nombre?.firstOrNull()?.uppercaseChar()?.toString() ?: "?",
-                            color = FondoBlanco,
-                            fontWeight = FontWeight.Bold,
-                            fontSize = 20.sp
+                                text = user?.nombre?.firstOrNull()?.uppercaseChar()?.toString()
+                                                ?: "?",
+                                color = FondoBlanco,
+                                fontWeight = FontWeight.Bold,
+                                fontSize = 20.sp
                         )
                     }
 
@@ -98,16 +98,12 @@ fun SettingsScreen(
 
                     Column {
                         Text(
-                            text = user?.nombre ?: "Cargando...",
-                            fontWeight = FontWeight.Bold,
-                            fontSize = 16.sp,
-                            color = LetrasNegras
+                                text = user?.nombre ?: "Cargando...",
+                                fontWeight = FontWeight.Bold,
+                                fontSize = 16.sp,
+                                color = LetrasNegras
                         )
-                        Text(
-                            text = user?.celular ?: "",
-                            fontSize = 14.sp,
-                            color = LetrasNegras50
-                        )
+                        Text(text = user?.celular ?: "", fontSize = 14.sp, color = LetrasNegras50)
                     }
                 }
             }
@@ -116,70 +112,70 @@ fun SettingsScreen(
 
             // Opciones
             Card(
-                modifier = Modifier
-                    .fillMaxWidth()
-                    .padding(horizontal = 24.dp),
-                shape = RoundedCornerShape(16.dp),
-                colors = CardDefaults.cardColors(containerColor = FondoBlanco),
-                elevation = CardDefaults.cardElevation(defaultElevation = 2.dp)
+                    modifier = Modifier.fillMaxWidth().padding(horizontal = 24.dp),
+                    shape = RoundedCornerShape(16.dp),
+                    colors = CardDefaults.cardColors(containerColor = FondoBlanco),
+                    elevation = CardDefaults.cardElevation(defaultElevation = 2.dp)
             ) {
                 Column {
                     Row(
-                        modifier = Modifier
-                            .fillMaxWidth()
-                            .clickable { navController.navigate(NavRoutes.EDIT_PROFILE) }
-                            .padding(horizontal = 16.dp, vertical = 16.dp),
-                        verticalAlignment = Alignment.CenterVertically
+                            modifier =
+                                    Modifier.fillMaxWidth()
+                                            .clickable {
+                                                navController.navigate(NavRoutes.EDIT_PROFILE)
+                                            }
+                                            .padding(horizontal = 16.dp, vertical = 16.dp),
+                            verticalAlignment = Alignment.CenterVertically
                     ) {
                         Icon(
-                            imageVector = Icons.Filled.Edit,
-                            contentDescription = "Editar perfil",
-                            tint = LetrasNegras,
-                            modifier = Modifier.size(22.dp)
+                                imageVector = Icons.Filled.Edit,
+                                contentDescription = "Editar perfil",
+                                tint = LetrasNegras,
+                                modifier = Modifier.size(22.dp)
                         )
                         Spacer(modifier = Modifier.width(12.dp))
                         Text(
-                            text = "Editar perfil",
-                            fontSize = 15.sp,
-                            color = LetrasNegras,
-                            modifier = Modifier.weight(1f)
+                                text = "Editar perfil",
+                                fontSize = 15.sp,
+                                color = LetrasNegras,
+                                modifier = Modifier.weight(1f)
                         )
                         Icon(
-                            imageVector = Icons.AutoMirrored.Filled.KeyboardArrowRight,
-                            contentDescription = null,
-                            tint = LetrasNegras50
+                                imageVector = Icons.AutoMirrored.Filled.KeyboardArrowRight,
+                                contentDescription = null,
+                                tint = LetrasNegras50
                         )
                     }
 
                     HorizontalDivider(
-                        modifier = Modifier.padding(horizontal = 16.dp),
-                        color = IconosMenu
+                            modifier = Modifier.padding(horizontal = 16.dp),
+                            color = IconosMenu
                     )
 
                     Row(
-                        modifier = Modifier
-                            .fillMaxWidth()
-                            .clickable { showLogoutDialog = true }
-                            .padding(horizontal = 16.dp, vertical = 16.dp),
-                        verticalAlignment = Alignment.CenterVertically
+                            modifier =
+                                    Modifier.fillMaxWidth()
+                                            .clickable { showLogoutDialog = true }
+                                            .padding(horizontal = 16.dp, vertical = 16.dp),
+                            verticalAlignment = Alignment.CenterVertically
                     ) {
                         Icon(
-                            imageVector = Icons.AutoMirrored.Filled.ExitToApp,
-                            contentDescription = "Cerrar sesión",
-                            tint = LetrasNegras,
-                            modifier = Modifier.size(22.dp)
+                                imageVector = Icons.AutoMirrored.Filled.ExitToApp,
+                                contentDescription = "Cerrar sesión",
+                                tint = LetrasNegras,
+                                modifier = Modifier.size(22.dp)
                         )
                         Spacer(modifier = Modifier.width(12.dp))
                         Text(
-                            text = "Cerrar sesión",
-                            fontSize = 15.sp,
-                            color = LetrasNegras,
-                            modifier = Modifier.weight(1f)
+                                text = "Cerrar sesión",
+                                fontSize = 15.sp,
+                                color = LetrasNegras,
+                                modifier = Modifier.weight(1f)
                         )
                         Icon(
-                            imageVector = Icons.AutoMirrored.Filled.KeyboardArrowRight,
-                            contentDescription = null,
-                            tint = LetrasNegras50
+                                imageVector = Icons.AutoMirrored.Filled.KeyboardArrowRight,
+                                contentDescription = null,
+                                tint = LetrasNegras50
                         )
                     }
                 }
@@ -189,39 +185,35 @@ fun SettingsScreen(
 
     if (showLogoutDialog) {
         AlertDialog(
-            onDismissRequest = { showLogoutDialog = false },
-            text = {
-                Text(
-                    text = "¿Seguro desea proceder con el cierre de sesión?",
-                    fontSize = 15.sp,
-                    color = LetrasNegras
-                )
-            },
-            confirmButton = {
-                Button(
-                    onClick = {
-                        SessionManager.clearSession(context)
-                        navController.navigate(NavRoutes.LOGIN) {
-                            popUpTo(0) { inclusive = true }
-                        }
-                    },
-                    colors = ButtonDefaults.buttonColors(containerColor = FondoPrincipal),
-                    shape = RoundedCornerShape(50.dp)
-                ) {
-                    Text("Sí", color = FondoBlanco)
-                }
-            },
-            dismissButton = {
-                Button(
-                    onClick = { showLogoutDialog = false },
-                    colors = ButtonDefaults.buttonColors(containerColor = FondoPrincipal),
-                    shape = RoundedCornerShape(50.dp)
-                ) {
-                    Text("No", color = FondoBlanco)
-                }
-            },
-            shape = RoundedCornerShape(16.dp),
-            containerColor = FondoBlanco
+                onDismissRequest = { showLogoutDialog = false },
+                text = {
+                    Text(
+                            text = "¿Seguro desea proceder con el cierre de sesión?",
+                            fontSize = 15.sp,
+                            color = LetrasNegras
+                    )
+                },
+                confirmButton = {
+                    Button(
+                            onClick = {
+                                AuthPreferences.clearSession(context)
+                                navController.navigate(NavRoutes.LOGIN) {
+                                    popUpTo(0) { inclusive = true }
+                                }
+                            },
+                            colors = ButtonDefaults.buttonColors(containerColor = FondoPrincipal),
+                            shape = RoundedCornerShape(50.dp)
+                    ) { Text("Sí", color = FondoBlanco) }
+                },
+                dismissButton = {
+                    Button(
+                            onClick = { showLogoutDialog = false },
+                            colors = ButtonDefaults.buttonColors(containerColor = FondoPrincipal),
+                            shape = RoundedCornerShape(50.dp)
+                    ) { Text("No", color = FondoBlanco) }
+                },
+                shape = RoundedCornerShape(16.dp),
+                containerColor = FondoBlanco
         )
     }
 }

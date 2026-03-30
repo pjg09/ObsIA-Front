@@ -4,7 +4,7 @@ import android.content.Context
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
 import com.upb.obsia.data.AppDatabase
-import com.upb.obsia.data.SessionManager
+import com.upb.obsia.data.AuthPreferences
 import com.upb.obsia.data.User
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.flow.MutableStateFlow
@@ -20,12 +20,10 @@ class SettingsViewModel : ViewModel() {
 
     fun loadUser(context: Context) {
         viewModelScope.launch {
-            val userId = SessionManager.getUserId(context)
+            val userId = AuthPreferences.getUserId(context)
             if (userId == -1) return@launch
             val db = AppDatabase.getInstance(context)
-            val result = withContext(Dispatchers.IO) {
-                db.userDao().getById(userId)
-            }
+            val result = withContext(Dispatchers.IO) { db.userDao().getById(userId) }
             _user.value = result
         }
     }

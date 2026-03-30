@@ -20,56 +20,49 @@ import com.upb.obsia.ui.theme.LetrasNegras50
 fun BottomNavBar(navController: NavController) {
     val currentRoute = navController.currentBackStackEntryAsState().value?.destination?.route
 
-    NavigationBar(
-        containerColor = Color.White,
-        tonalElevation = 0.dp
-    ) {
+    NavigationBar(containerColor = Color.White, tonalElevation = 0.dp) {
         NavigationBarItem(
-            selected = currentRoute == NavRoutes.CHAT_PAGE,
-            onClick = {
-                navController.navigate(NavRoutes.CHAT_PAGE) {
-                    launchSingleTop = true
-                }
-            },
-            icon = {
-                Icon(
-                    imageVector = Icons.Filled.Chat,
-                    contentDescription = "Chats",
-                    modifier = Modifier.size(28.dp)
-                )
-            },
-            label = { Text("Chats", fontSize = 13.sp) },
-            colors = NavigationBarItemDefaults.colors(
-                selectedIconColor = FondoPrincipal,
-                selectedTextColor = FondoPrincipal,
-                unselectedIconColor = LetrasNegras50,
-                unselectedTextColor = LetrasNegras50,
-                indicatorColor = Color.Transparent
-            )
+                selected = currentRoute == NavRoutes.CHAT_LIST,
+                onClick = {
+                    navController.navigate(NavRoutes.CHAT_LIST) { launchSingleTop = true }
+                },
+                icon = {
+                    Icon(
+                            imageVector = Icons.Filled.Chat,
+                            contentDescription = "Chats",
+                            modifier = Modifier.size(28.dp)
+                    )
+                },
+                label = { Text("Chats", fontSize = 13.sp) },
+                colors =
+                        NavigationBarItemDefaults.colors(
+                                selectedIconColor = FondoPrincipal,
+                                selectedTextColor = FondoPrincipal,
+                                unselectedIconColor = LetrasNegras50,
+                                unselectedTextColor = LetrasNegras50,
+                                indicatorColor = Color.Transparent
+                        )
         )
 
         NavigationBarItem(
-            selected = currentRoute == NavRoutes.SETTINGS,
-            onClick = {
-                navController.navigate(NavRoutes.SETTINGS) {
-                    launchSingleTop = true
-                }
-            },
-            icon = {
-                Icon(
-                    imageVector = Icons.Filled.Settings,
-                    contentDescription = "Configuración",
-                    modifier = Modifier.size(28.dp)
-                )
-            },
-            label = { Text("Configuración", fontSize = 13.sp) },
-            colors = NavigationBarItemDefaults.colors(
-                selectedIconColor = FondoPrincipal,
-                selectedTextColor = FondoPrincipal,
-                unselectedIconColor = LetrasNegras50,
-                unselectedTextColor = LetrasNegras50,
-                indicatorColor = Color.Transparent
-            )
+                selected = currentRoute == NavRoutes.SETTINGS,
+                onClick = { navController.navigate(NavRoutes.SETTINGS) { launchSingleTop = true } },
+                icon = {
+                    Icon(
+                            imageVector = Icons.Filled.Settings,
+                            contentDescription = "Configuración",
+                            modifier = Modifier.size(28.dp)
+                    )
+                },
+                label = { Text("Configuración", fontSize = 13.sp) },
+                colors =
+                        NavigationBarItemDefaults.colors(
+                                selectedIconColor = FondoPrincipal,
+                                selectedTextColor = FondoPrincipal,
+                                unselectedIconColor = LetrasNegras50,
+                                unselectedTextColor = LetrasNegras50,
+                                indicatorColor = Color.Transparent
+                        )
         )
     }
 }
