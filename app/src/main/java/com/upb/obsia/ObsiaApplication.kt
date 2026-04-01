@@ -1,10 +1,21 @@
 package com.upb.obsia
 
 import android.app.Application
-import dagger.hilt.android.HiltAndroidApp
+import com.upb.obsia.di.appModule
+import org.koin.android.ext.koin.androidContext
+import org.koin.android.ext.koin.androidLogger
+import org.koin.core.context.startKoin
+import org.koin.core.logger.Level
 
-/**
- * Entry point de Hilt. Sin lógica adicional — el motor se inicializa de forma lazy la primera vez
- * que el usuario entra a ChatScreen.
- */
-@HiltAndroidApp class ObsiaApplication : Application()
+class ObsiaApplication : Application() {
+
+    override fun onCreate() {
+        super.onCreate()
+        startKoin {
+            // En release cambiar a Level.ERROR para no pagar el costo de logging
+            androidLogger(Level.DEBUG)
+            androidContext(this@ObsiaApplication)
+            modules(appModule)
+        }
+    }
+}

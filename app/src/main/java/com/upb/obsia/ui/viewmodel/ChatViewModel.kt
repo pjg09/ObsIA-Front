@@ -8,9 +8,6 @@ import com.upb.obsia.data.ChatMessage
 import com.upb.obsia.domain.model.EngineResponse
 import com.upb.obsia.domain.repository.ChatRepository
 import com.upb.obsia.domain.repository.EngineRepository
-import dagger.hilt.android.lifecycle.HiltViewModel
-import dagger.hilt.android.qualifiers.ApplicationContext
-import javax.inject.Inject
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.asStateFlow
@@ -29,11 +26,8 @@ sealed class ChatQueryState {
     data class Error(val message: String) : ChatQueryState()
 }
 
-@HiltViewModel
-class ChatViewModel
-@Inject
-constructor(
-        @ApplicationContext private val context: Context,
+class ChatViewModel(
+        private val context: Context,
         private val engineRepository: EngineRepository,
         private val chatRepository: ChatRepository
 ) : ViewModel() {
@@ -54,12 +48,7 @@ constructor(
 
     private var sessionId: Int = -1
 
-    /**
-     * Punto de entrada. Solo recibe sessionId — userId se resuelve internamente desde
-     * AuthPreferences sin contaminar la firma.
-     */
     fun initialize(sessionId: Int) {
-        // Evitar reinicialización si ya está listo (ej: rotación de pantalla).
         if (_initState.value is ChatInitState.Ready) return
 
         this.sessionId = sessionId
@@ -71,10 +60,8 @@ constructor(
         }
 
         viewModelScope.launch {
-            // Resolver nombre de sesión
             _sessionName.value = chatRepository.getSessionName(sessionId) ?: "Chat"
 
-            // Inicializar motor (lazy — si ya está listo, retorna inmediatamente)
             _initState.value = ChatInitState.Initializing
             val engineReady = engineRepository.initialize()
 
@@ -83,9 +70,7 @@ constructor(
                 return@launch
             }
 
-            // Cargar historial
             _messages.value = chatRepository.getMessages(sessionId)
-
             _initState.value = ChatInitState.Ready
         }
     }
@@ -102,7 +87,6 @@ constructor(
             _messages.value = _messages.value + userMessage.copy(id = userMsgId.toInt())
 
             chatRepository.touchSession(sessionId)
-
             _queryState.value = ChatQueryState.Loading
 
             when (val response = engineRepository.query(text.trim())) {

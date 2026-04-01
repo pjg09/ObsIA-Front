@@ -64,7 +64,6 @@ import androidx.compose.ui.text.input.ImeAction
 import androidx.compose.ui.text.input.KeyboardCapitalization
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
-import androidx.hilt.navigation.compose.hiltViewModel
 import com.upb.obsia.ui.theme.AzulAuxiliarChat
 import com.upb.obsia.ui.theme.FondoChat
 import com.upb.obsia.ui.theme.FondoPrincipal
@@ -74,13 +73,14 @@ import com.upb.obsia.ui.theme.MensajesUsuario
 import com.upb.obsia.ui.viewmodel.ChatInitState
 import com.upb.obsia.ui.viewmodel.ChatQueryState
 import com.upb.obsia.ui.viewmodel.ChatViewModel
+import org.koin.compose.viewmodel.koinViewModel
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
 fun ChatScreen(
         sessionId: Int,
         onNavigateBack: () -> Unit,
-        viewModel: ChatViewModel = hiltViewModel() // ← hiltViewModel() reemplaza viewModel()
+        viewModel: ChatViewModel = koinViewModel() // ← koinViewModel() reemplaza hiltViewModel()
 ) {
         val initState by viewModel.initState.collectAsState()
         val queryState by viewModel.queryState.collectAsState()
@@ -91,7 +91,6 @@ fun ChatScreen(
 
         var inputText by remember { mutableStateOf("") }
 
-        // Context ya no se pasa — el ViewModel lo obtiene internamente vía @ApplicationContext
         LaunchedEffect(Unit) { viewModel.initialize(sessionId) }
 
         LaunchedEffect(messages.size, queryState) {
@@ -138,9 +137,7 @@ fun ChatScreen(
                                                 queryState !is ChatQueryState.Loading,
                                 onSend = {
                                         if (inputText.isNotBlank()) {
-                                                viewModel.sendMessage(
-                                                        inputText
-                                                ) // ← ya no recibe context
+                                                viewModel.sendMessage(inputText)
                                                 inputText = ""
                                                 keyboardController?.hide()
                                         }
@@ -214,8 +211,6 @@ fun ChatScreen(
                 }
         }
 }
-
-// ─── Componentes privados (sin cambios funcionales) ──────────────────────────
 
 @Composable
 private fun UserBubble(text: String) {

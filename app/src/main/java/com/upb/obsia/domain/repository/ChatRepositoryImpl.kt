@@ -4,15 +4,10 @@ import com.upb.obsia.data.ChatMessage
 import com.upb.obsia.data.ChatMessageDao
 import com.upb.obsia.data.ChatSessionDao
 import com.upb.obsia.domain.repository.ChatRepository
-import javax.inject.Inject
-import javax.inject.Singleton
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.withContext
 
-@Singleton
-class ChatRepositoryImpl
-@Inject
-constructor(
+class ChatRepositoryImpl(
         private val chatMessageDao: ChatMessageDao,
         private val chatSessionDao: ChatSessionDao
 ) : ChatRepository {

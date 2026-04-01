@@ -4,34 +4,24 @@ import android.content.Context
 import com.obsIA.engine.NativeEngine
 import com.upb.obsia.domain.model.EngineResponse
 import com.upb.obsia.domain.repository.EngineRepository
-import dagger.hilt.android.qualifiers.ApplicationContext
 import java.io.File
 import java.io.FileOutputStream
-import javax.inject.Inject
-import javax.inject.Singleton
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.sync.Mutex
 import kotlinx.coroutines.sync.withLock
 import kotlinx.coroutines.withContext
 import org.json.JSONObject
 
-@Singleton
-class EngineRepositoryImpl @Inject constructor(@ApplicationContext private val context: Context) :
-        EngineRepository {
+class EngineRepositoryImpl(private val context: Context) : EngineRepository {
 
     private val engine = NativeEngine()
-
-    // Mutex garantiza que initialize() no se ejecute en paralelo
-    // si dos coroutines lo llaman al mismo tiempo.
     private val initMutex = Mutex()
     private var initialized = false
 
     override suspend fun initialize(): Boolean {
-        // Fast path: si ya está listo no adquirimos el mutex.
         if (initialized) return true
 
         return initMutex.withLock {
-            // Double-check dentro del lock.
             if (initialized) return@withLock true
 
             try {
@@ -73,8 +63,6 @@ class EngineRepositoryImpl @Inject constructor(@ApplicationContext private val c
     }
 
     override fun isReady(): Boolean = initialized
-
-    //  Helpers privados
 
     private suspend fun copyAssetIfNeeded(assetName: String): File =
             withContext(Dispatchers.IO) {
