@@ -58,14 +58,13 @@ import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
 import androidx.compose.ui.graphics.Color
-import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.platform.LocalSoftwareKeyboardController
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.input.ImeAction
 import androidx.compose.ui.text.input.KeyboardCapitalization
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
-import androidx.lifecycle.viewmodel.compose.viewModel
+import androidx.hilt.navigation.compose.hiltViewModel
 import com.upb.obsia.ui.theme.AzulAuxiliarChat
 import com.upb.obsia.ui.theme.FondoChat
 import com.upb.obsia.ui.theme.FondoPrincipal
@@ -78,20 +77,22 @@ import com.upb.obsia.ui.viewmodel.ChatViewModel
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
-fun ChatScreen(sessionId: Int, onNavigateBack: () -> Unit, viewModel: ChatViewModel = viewModel()) {
-        val context = LocalContext.current
+fun ChatScreen(
+        sessionId: Int,
+        onNavigateBack: () -> Unit,
+        viewModel: ChatViewModel = hiltViewModel() // ← hiltViewModel() reemplaza viewModel()
+) {
         val initState by viewModel.initState.collectAsState()
         val queryState by viewModel.queryState.collectAsState()
         val messages by viewModel.messages.collectAsState()
-        // sessionName se resuelve internamente en el ViewModel desde la DB
         val sessionName by viewModel.sessionName.collectAsState()
         val listState = rememberLazyListState()
         val keyboardController = LocalSoftwareKeyboardController.current
 
         var inputText by remember { mutableStateOf("") }
 
-        // Solo necesita sessionId — userId y sessionName los resuelve el ViewModel
-        LaunchedEffect(Unit) { viewModel.initialize(context, sessionId) }
+        // Context ya no se pasa — el ViewModel lo obtiene internamente vía @ApplicationContext
+        LaunchedEffect(Unit) { viewModel.initialize(sessionId) }
 
         LaunchedEffect(messages.size, queryState) {
                 if (messages.isNotEmpty()) {
@@ -137,7 +138,9 @@ fun ChatScreen(sessionId: Int, onNavigateBack: () -> Unit, viewModel: ChatViewMo
                                                 queryState !is ChatQueryState.Loading,
                                 onSend = {
                                         if (inputText.isNotBlank()) {
-                                                viewModel.sendMessage(context, inputText)
+                                                viewModel.sendMessage(
+                                                        inputText
+                                                ) // ← ya no recibe context
                                                 inputText = ""
                                                 keyboardController?.hide()
                                         }
@@ -211,6 +214,8 @@ fun ChatScreen(sessionId: Int, onNavigateBack: () -> Unit, viewModel: ChatViewMo
                 }
         }
 }
+
+// ─── Componentes privados (sin cambios funcionales) ──────────────────────────
 
 @Composable
 private fun UserBubble(text: String) {
