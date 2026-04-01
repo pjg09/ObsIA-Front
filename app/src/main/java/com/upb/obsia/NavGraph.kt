@@ -1,5 +1,3 @@
-// Ruta: app/src/main/java/com/upb/obsia/NavGraph.kt
-
 package com.upb.obsia
 
 import androidx.compose.runtime.Composable

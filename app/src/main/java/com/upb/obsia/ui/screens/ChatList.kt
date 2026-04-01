@@ -1,5 +1,3 @@
-// Ruta: app/src/main/java/com/upb/obsia/ui/screens/ChatList.kt
-
 package com.upb.obsia.ui.screens
 
 import androidx.compose.foundation.ExperimentalFoundationApi

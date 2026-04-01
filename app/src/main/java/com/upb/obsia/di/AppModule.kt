@@ -1,3 +1,5 @@
+// Ruta: app/src/main/java/com/upb/obsia/di/AppModule.kt
+
 package com.upb.obsia.di
 
 import com.upb.obsia.data.AppDatabase
@@ -19,11 +21,11 @@ val appModule = module {
     single { get<AppDatabase>().chatSessionDao() }
     single { get<AppDatabase>().userDao() }
 
-    // ─── Repositorios (singleton — una instancia por app) ─────────────────────
+    // ─── Repositorios ─────────────────────────────────────────────────────────
     single<EngineRepository> { EngineRepositoryImpl(androidContext()) }
     single<ChatRepository> { ChatRepositoryImpl(get(), get()) }
 
     // ─── ViewModels ───────────────────────────────────────────────────────────
     viewModel { ChatViewModel(androidContext(), get(), get()) }
-    viewModel { ChatListViewModel(androidContext(), get()) }
+    viewModel { ChatListViewModel() }
 }
