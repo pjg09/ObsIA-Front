@@ -74,7 +74,7 @@ class EngineRepositoryImpl @Inject constructor(@ApplicationContext private val c
 
     override fun isReady(): Boolean = initialized
 
-    // ─── Helpers privados ────────────────────────────────────────────────────
+    //  Helpers privados
 
     private suspend fun copyAssetIfNeeded(assetName: String): File =
             withContext(Dispatchers.IO) {
