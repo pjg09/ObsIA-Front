@@ -1,45 +1,29 @@
 package com.upb.obsia.di
 
-import android.content.Context
 import com.upb.obsia.data.AppDatabase
-import com.upb.obsia.data.ChatMessageDao
-import com.upb.obsia.data.ChatSessionDao
-import com.upb.obsia.data.UserDao
 import com.upb.obsia.data.repository.ChatRepositoryImpl
 import com.upb.obsia.data.repository.EngineRepositoryImpl
 import com.upb.obsia.domain.repository.ChatRepository
 import com.upb.obsia.domain.repository.EngineRepository
-import dagger.Binds
-import dagger.Module
-import dagger.Provides
-import dagger.hilt.InstallIn
-import dagger.hilt.android.qualifiers.ApplicationContext
-import dagger.hilt.components.SingletonComponent
-import javax.inject.Singleton
+import com.upb.obsia.ui.viewmodel.ChatListViewModel
+import com.upb.obsia.ui.viewmodel.ChatViewModel
+import org.koin.android.ext.koin.androidContext
+import org.koin.core.module.dsl.viewModel
+import org.koin.dsl.module
 
-@Module
-@InstallIn(SingletonComponent::class)
-object DatabaseModule {
+val appModule = module {
 
-    @Provides
-    @Singleton
-    fun provideAppDatabase(@ApplicationContext context: Context): AppDatabase =
-            AppDatabase.getInstance(context)
+    // ─── Base de datos ────────────────────────────────────────────────────────
+    single { AppDatabase.getInstance(androidContext()) }
+    single { get<AppDatabase>().chatMessageDao() }
+    single { get<AppDatabase>().chatSessionDao() }
+    single { get<AppDatabase>().userDao() }
 
-    @Provides fun provideChatMessageDao(db: AppDatabase): ChatMessageDao = db.chatMessageDao()
+    // ─── Repositorios (singleton — una instancia por app) ─────────────────────
+    single<EngineRepository> { EngineRepositoryImpl(androidContext()) }
+    single<ChatRepository> { ChatRepositoryImpl(get(), get()) }
 
-    @Provides fun provideChatSessionDao(db: AppDatabase): ChatSessionDao = db.chatSessionDao()
-
-    @Provides fun provideUserDao(db: AppDatabase): UserDao = db.userDao()
-}
-
-@Module
-@InstallIn(SingletonComponent::class)
-abstract class RepositoryModule {
-
-    @Binds
-    @Singleton
-    abstract fun bindEngineRepository(impl: EngineRepositoryImpl): EngineRepository
-
-    @Binds @Singleton abstract fun bindChatRepository(impl: ChatRepositoryImpl): ChatRepository
+    // ─── ViewModels ───────────────────────────────────────────────────────────
+    viewModel { ChatViewModel(androidContext(), get(), get()) }
+    viewModel { ChatListViewModel(androidContext(), get()) }
 }
