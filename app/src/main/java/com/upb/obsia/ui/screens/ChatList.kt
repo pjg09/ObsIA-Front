@@ -1,3 +1,5 @@
+// Ruta: app/src/main/java/com/upb/obsia/ui/screens/ChatList.kt
+
 package com.upb.obsia.ui.screens
 
 import androidx.compose.foundation.ExperimentalFoundationApi
@@ -57,22 +59,19 @@ import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
 import androidx.compose.ui.graphics.Color
-import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.input.ImeAction
 import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
-import androidx.lifecycle.viewmodel.compose.viewModel
 import com.upb.obsia.data.ChatSession
 import com.upb.obsia.ui.theme.FondoBlanco
 import com.upb.obsia.ui.theme.FondoPrincipal
 import com.upb.obsia.ui.theme.LetrasNegras
 import com.upb.obsia.ui.theme.LetrasNegras50
 import com.upb.obsia.ui.viewmodel.ChatListViewModel
+import org.koin.compose.viewmodel.koinViewModel
 
-// Color gris medio para ítems no seleccionados — reemplaza IconosMenu (0xFFD9D9D9) que era
-// demasiado claro
 private val IconosMenuOscuro = Color(0xFF8A8A8A)
 
 @OptIn(ExperimentalMaterial3Api::class, ExperimentalFoundationApi::class)
@@ -80,9 +79,8 @@ private val IconosMenuOscuro = Color(0xFF8A8A8A)
 fun ChatList(
         onNavigateToChat: (sessionId: Int) -> Unit,
         onNavigateToSettings: () -> Unit,
-        viewModel: ChatListViewModel = viewModel()
+        viewModel: ChatListViewModel = koinViewModel() // ← koinViewModel() reemplaza viewModel()
 ) {
-        val context = LocalContext.current
         val sessions by viewModel.sessions.collectAsState()
         val searchQuery by viewModel.searchQuery.collectAsState()
         val newSessionId by viewModel.newSessionId.collectAsState()
@@ -94,10 +92,9 @@ fun ChatList(
         var sessionForMenu by remember { mutableStateOf<ChatSession?>(null) }
         var sessionToDelete by remember { mutableStateOf<ChatSession?>(null) }
 
-        // Carga sesiones al entrar
-        LaunchedEffect(Unit) { viewModel.loadSessions(context) }
+        // Context ya no se pasa — el ViewModel lo obtiene internamente
+        LaunchedEffect(Unit) { viewModel.loadSessions() }
 
-        // Navega cuando se crea una sesión nueva
         LaunchedEffect(newSessionId) {
                 newSessionId?.let { id ->
                         viewModel.onNavigationHandled()
@@ -105,7 +102,6 @@ fun ChatList(
                 }
         }
 
-        // Muestra errores como Snackbar
         LaunchedEffect(errorMessage) {
                 errorMessage?.let {
                         snackbarHostState.showSnackbar(it)
@@ -113,23 +109,21 @@ fun ChatList(
                 }
         }
 
-        // Diálogo de renombrar
         selectedSession?.let { session ->
                 RenameDialog(
                         currentTitle = session.title,
                         onConfirm = { newTitle ->
-                                viewModel.renameSession(context, session, newTitle)
-                        },
+                                viewModel.renameSession(session, newTitle)
+                        }, // ← sin context
                         onDismiss = { viewModel.dismissRenameDialog() }
                 )
         }
 
-        // Diálogo de confirmar eliminación
         sessionToDelete?.let { session ->
                 DeleteConfirmDialog(
                         sessionTitle = session.title,
                         onConfirm = {
-                                viewModel.deleteSession(context, session)
+                                viewModel.deleteSession(session) // ← sin context
                                 sessionToDelete = null
                         },
                         onDismiss = { sessionToDelete = null }
@@ -141,7 +135,7 @@ fun ChatList(
                 containerColor = FondoBlanco,
                 floatingActionButton = {
                         FloatingActionButton(
-                                onClick = { viewModel.createNewSession(context) },
+                                onClick = { viewModel.createNewSession() }, // ← sin context
                                 containerColor = FondoPrincipal,
                                 contentColor = FondoBlanco,
                                 shape = CircleShape,
@@ -155,12 +149,11 @@ fun ChatList(
                         }
                 },
                 bottomBar = {
-                        // Surface aporta la sombra que separa visualmente el nav bar del contenido
                         Surface(shadowElevation = 8.dp, color = FondoBlanco) {
                                 NavigationBar(containerColor = FondoBlanco, tonalElevation = 0.dp) {
                                         NavigationBarItem(
                                                 selected = true,
-                                                onClick = { /* ya estamos aquí */},
+                                                onClick = {},
                                                 icon = {
                                                         Icon(
                                                                 imageVector = Icons.Filled.Forum,
@@ -205,13 +198,10 @@ fun ChatList(
                 }
         ) { innerPadding ->
                 Column(modifier = Modifier.fillMaxSize().padding(innerPadding)) {
-                        // Header teal
                         TopSearchBar(
                                 searchQuery = searchQuery,
                                 onSearchQueryChange = { viewModel.onSearchQueryChange(it) }
                         )
-
-                        // Lista o estado vacío
                         if (sessions.isEmpty()) {
                                 EmptyState()
                         } else {
@@ -225,7 +215,6 @@ fun ChatList(
                 }
         }
 
-        // DropdownMenu — se muestra sobre la UI cuando hay sesión seleccionada
         sessionForMenu?.let { session ->
                 DropdownMenu(expanded = true, onDismissRequest = { sessionForMenu = null }) {
                         DropdownMenuItem(
@@ -259,7 +248,7 @@ fun ChatList(
         }
 }
 
-// ─── Header ──────────────────────────────────────────────────────────────────
+// ─── Header ───────────────────────────────────────────────────────────────────
 
 @Composable
 private fun TopSearchBar(searchQuery: String, onSearchQueryChange: (String) -> Unit) {
@@ -271,9 +260,6 @@ private fun TopSearchBar(searchQuery: String, onSearchQueryChange: (String) -> U
                                 .padding(horizontal = 16.dp, vertical = 12.dp)
         ) {
                 Column {
-                        // TODO: Logo
-
-                        // Barra de búsqueda
                         Row(
                                 modifier =
                                         Modifier.fillMaxWidth()
@@ -305,7 +291,6 @@ private fun TopSearchBar(searchQuery: String, onSearchQueryChange: (String) -> U
                                                 ),
                                         modifier = Modifier.weight(1f)
                                 )
-
                                 Icon(
                                         imageVector = Icons.Filled.Search,
                                         contentDescription = null,

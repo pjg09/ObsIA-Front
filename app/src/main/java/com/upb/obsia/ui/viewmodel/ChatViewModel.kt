@@ -1,3 +1,5 @@
+// Ruta: app/src/main/java/com/upb/obsia/ui/viewmodel/ChatViewModel.kt
+
 package com.upb.obsia.ui.viewmodel
 
 import android.content.Context

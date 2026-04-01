@@ -17,7 +17,7 @@ import com.upb.obsia.ui.screens.SplashScreen
 
 @Composable
 fun NavGraph(navController: NavHostController) {
-    NavHost(navController = navController, startDestination = NavRoutes.SETTINGS) {
+    NavHost(navController = navController, startDestination = NavRoutes.SPLASH) {
         composable(NavRoutes.SPLASH) { SplashScreen(navController) }
         composable(NavRoutes.ONBOARDING) { OnboardingScreen(navController) }
         composable(NavRoutes.REGISTER) { RegisterScreen(navController) }

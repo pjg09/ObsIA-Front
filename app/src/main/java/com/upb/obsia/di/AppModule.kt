@@ -27,5 +27,5 @@ val appModule = module {
 
     // ─── ViewModels ───────────────────────────────────────────────────────────
     viewModel { ChatViewModel(androidContext(), get(), get()) }
-    viewModel { ChatListViewModel() }
+    viewModel { ChatListViewModel(androidContext(), get()) }
 }
