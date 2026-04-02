@@ -2,6 +2,9 @@
 
 package com.upb.obsia.ui.screens
 
+import android.Manifest
+import androidx.activity.compose.rememberLauncherForActivityResult
+import androidx.activity.result.contract.ActivityResultContracts
 import androidx.compose.animation.AnimatedVisibility
 import androidx.compose.animation.core.LinearEasing
 import androidx.compose.animation.core.RepeatMode
@@ -37,6 +40,7 @@ import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.automirrored.filled.ArrowBack
 import androidx.compose.material.icons.automirrored.filled.Send
 import androidx.compose.material.icons.filled.Mic
+import androidx.compose.material.icons.filled.Stop
 import androidx.compose.material3.CircularProgressIndicator
 import androidx.compose.material3.ExperimentalMaterial3Api
 import androidx.compose.material3.Icon
@@ -51,8 +55,6 @@ import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.getValue
-import androidx.compose.runtime.mutableStateOf
-import androidx.compose.runtime.remember
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
@@ -73,6 +75,7 @@ import com.upb.obsia.ui.theme.MensajesUsuario
 import com.upb.obsia.ui.viewmodel.ChatInitState
 import com.upb.obsia.ui.viewmodel.ChatQueryState
 import com.upb.obsia.ui.viewmodel.ChatViewModel
+import com.upb.obsia.ui.viewmodel.VoiceState
 import org.koin.compose.viewmodel.koinViewModel
 
 @OptIn(ExperimentalMaterial3Api::class)
@@ -80,16 +83,23 @@ import org.koin.compose.viewmodel.koinViewModel
 fun ChatScreen(
         sessionId: Int,
         onNavigateBack: () -> Unit,
-        viewModel: ChatViewModel = koinViewModel() // ← koinViewModel() reemplaza hiltViewModel()
+        viewModel: ChatViewModel = koinViewModel()
 ) {
         val initState by viewModel.initState.collectAsState()
         val queryState by viewModel.queryState.collectAsState()
         val messages by viewModel.messages.collectAsState()
         val sessionName by viewModel.sessionName.collectAsState()
+        val voiceState by viewModel.voiceState.collectAsState()
+        val inputText by viewModel.inputText.collectAsState()
+
         val listState = rememberLazyListState()
         val keyboardController = LocalSoftwareKeyboardController.current
 
-        var inputText by remember { mutableStateOf("") }
+        // Manejo de permiso de micrófono
+        val permissionLauncher =
+                rememberLauncherForActivityResult(
+                        contract = ActivityResultContracts.RequestPermission()
+                ) { granted -> if (granted) viewModel.toggleVoice() }
 
         LaunchedEffect(Unit) { viewModel.initialize(sessionId) }
 
@@ -131,14 +141,18 @@ fun ChatScreen(
                 bottomBar = {
                         ChatInputBar(
                                 inputText = inputText,
-                                onTextChange = { inputText = it },
+                                onTextChange = { viewModel.updateInputText(it) },
                                 isEnabled =
                                         initState is ChatInitState.Ready &&
                                                 queryState !is ChatQueryState.Loading,
+                                voiceState = voiceState,
+                                onMicClick = {
+                                        permissionLauncher.launch(Manifest.permission.RECORD_AUDIO)
+                                },
                                 onSend = {
                                         if (inputText.isNotBlank()) {
                                                 viewModel.sendMessage(inputText)
-                                                inputText = ""
+                                                viewModel.clearInputText()
                                                 keyboardController?.hide()
                                         }
                                 }
@@ -311,8 +325,12 @@ private fun ChatInputBar(
         inputText: String,
         onTextChange: (String) -> Unit,
         isEnabled: Boolean,
+        voiceState: VoiceState,
+        onMicClick: () -> Unit,
         onSend: () -> Unit
 ) {
+        val isListening = voiceState is VoiceState.Listening
+
         Row(
                 modifier =
                         Modifier.fillMaxWidth()
@@ -329,7 +347,9 @@ private fun ChatInputBar(
                         enabled = isEnabled,
                         placeholder = {
                                 Text(
-                                        text = "Escribe tu pregunta al chatbot",
+                                        text =
+                                                if (isListening) "Escuchando..."
+                                                else "Escribe tu pregunta al chatbot",
                                         color = LetrasNegras80,
                                         fontSize = 14.sp
                                 )
@@ -360,26 +380,45 @@ private fun ChatInputBar(
 
                 Box(
                         modifier =
-                                Modifier.size(50.dp).clip(CircleShape).background(FondoPrincipal),
+                                Modifier.size(50.dp)
+                                        .clip(CircleShape)
+                                        .background(
+                                                if (isListening) Color(0xFFE53935)
+                                                else FondoPrincipal
+                                        ),
                         contentAlignment = Alignment.Center
                 ) {
-                        if (inputText.isBlank()) {
-                                IconButton(onClick = { /* TODO: voz */}, enabled = isEnabled) {
-                                        Icon(
-                                                imageVector = Icons.Default.Mic,
-                                                contentDescription = "Micrófono",
-                                                tint = Color.White,
-                                                modifier = Modifier.size(24.dp)
-                                        )
+                        when {
+                                inputText.isNotBlank() && !isListening -> {
+                                        IconButton(onClick = onSend, enabled = isEnabled) {
+                                                Icon(
+                                                        imageVector =
+                                                                Icons.AutoMirrored.Filled.Send,
+                                                        contentDescription = "Enviar",
+                                                        tint = Color.White,
+                                                        modifier = Modifier.size(24.dp)
+                                                )
+                                        }
                                 }
-                        } else {
-                                IconButton(onClick = onSend, enabled = isEnabled) {
-                                        Icon(
-                                                imageVector = Icons.AutoMirrored.Filled.Send,
-                                                contentDescription = "Enviar",
-                                                tint = Color.White,
-                                                modifier = Modifier.size(24.dp)
-                                        )
+                                isListening -> {
+                                        IconButton(onClick = onMicClick, enabled = isEnabled) {
+                                                Icon(
+                                                        imageVector = Icons.Default.Stop,
+                                                        contentDescription = "Detener grabación",
+                                                        tint = Color.White,
+                                                        modifier = Modifier.size(24.dp)
+                                                )
+                                        }
+                                }
+                                else -> {
+                                        IconButton(onClick = onMicClick, enabled = isEnabled) {
+                                                Icon(
+                                                        imageVector = Icons.Default.Mic,
+                                                        contentDescription = "Micrófono",
+                                                        tint = Color.White,
+                                                        modifier = Modifier.size(24.dp)
+                                                )
+                                        }
                                 }
                         }
                 }
