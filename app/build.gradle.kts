@@ -3,10 +3,13 @@ plugins {
     alias(libs.plugins.kotlin.compose)
     alias(libs.plugins.kotlin.android)
     alias(libs.plugins.ksp)
+    // Hilt eliminado — no hay plugin de Gradle en Koin
 }
+
 android {
     namespace = "com.upb.obsia"
     compileSdk = 35
+
     defaultConfig {
         applicationId = "com.upb.obsia"
         minSdk = 26
@@ -15,6 +18,7 @@ android {
         versionName = "1.0"
         testInstrumentationRunner = "androidx.test.runner.AndroidJUnitRunner"
     }
+
     buildTypes {
         release {
             isMinifyEnabled = false
@@ -24,17 +28,21 @@ android {
             )
         }
     }
+
     compileOptions {
         sourceCompatibility = JavaVersion.VERSION_11
         targetCompatibility = JavaVersion.VERSION_11
     }
+
     buildFeatures {
         compose = true
     }
+
     kotlinOptions {
         jvmTarget = "11"
     }
 }
+
 dependencies {
     implementation(libs.androidx.core.ktx)
     implementation(libs.androidx.lifecycle.runtime.ktx)
@@ -46,9 +54,19 @@ dependencies {
     implementation(libs.androidx.compose.material3)
     implementation("androidx.compose.material:material-icons-extended")
     implementation(libs.androidx.navigation.compose)
+    implementation(libs.androidx.lifecycle.viewmodel.compose)
+
+    // Room
     implementation(libs.androidx.room.runtime)
     implementation(libs.androidx.room.ktx)
     ksp(libs.androidx.room.compiler)
+
+    // Koin
+    implementation(libs.koin.android)
+    implementation(libs.koin.compose)
+    implementation(libs.koin.compose.viewmodel)
+
+    // Tests
     testImplementation(libs.junit)
     androidTestImplementation(libs.androidx.junit)
     androidTestImplementation(libs.androidx.espresso.core)

@@ -1,5 +1,3 @@
-// Ruta: app/src/main/java/com/upb/obsia/NavGraph.kt
-
 package com.upb.obsia
 
 import androidx.compose.runtime.Composable
@@ -19,7 +17,7 @@ import com.upb.obsia.ui.screens.SplashScreen
 
 @Composable
 fun NavGraph(navController: NavHostController) {
-    NavHost(navController = navController, startDestination = NavRoutes.SETTINGS) {
+    NavHost(navController = navController, startDestination = NavRoutes.SPLASH) {
         composable(NavRoutes.SPLASH) { SplashScreen(navController) }
         composable(NavRoutes.ONBOARDING) { OnboardingScreen(navController) }
         composable(NavRoutes.REGISTER) { RegisterScreen(navController) }
