@@ -1,5 +1,3 @@
-// Ruta: app/src/main/java/com/upb/obsia/ui/screens/ChatList.kt
-
 package com.upb.obsia.ui.screens
 
 import androidx.compose.foundation.ExperimentalFoundationApi
@@ -27,9 +25,7 @@ import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.AddComment
 import androidx.compose.material.icons.filled.Delete
 import androidx.compose.material.icons.filled.DriveFileRenameOutline
-import androidx.compose.material.icons.filled.Forum
 import androidx.compose.material.icons.filled.Search
-import androidx.compose.material.icons.filled.Settings
 import androidx.compose.material3.AlertDialog
 import androidx.compose.material3.ButtonDefaults
 import androidx.compose.material3.DropdownMenu
@@ -37,9 +33,6 @@ import androidx.compose.material3.DropdownMenuItem
 import androidx.compose.material3.ExperimentalMaterial3Api
 import androidx.compose.material3.FloatingActionButton
 import androidx.compose.material3.Icon
-import androidx.compose.material3.NavigationBar
-import androidx.compose.material3.NavigationBarItem
-import androidx.compose.material3.NavigationBarItemDefaults
 import androidx.compose.material3.OutlinedTextField
 import androidx.compose.material3.OutlinedTextFieldDefaults
 import androidx.compose.material3.Scaffold
@@ -64,6 +57,7 @@ import androidx.compose.ui.text.input.ImeAction
 import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
+import com.upb.obsia.NavRoutes
 import com.upb.obsia.data.ChatSession
 import com.upb.obsia.ui.theme.FondoBlanco
 import com.upb.obsia.ui.theme.FondoPrincipal
@@ -79,7 +73,7 @@ private val IconosMenuOscuro = Color(0xFF8A8A8A)
 fun ChatList(
         onNavigateToChat: (sessionId: Int) -> Unit,
         onNavigateToSettings: () -> Unit,
-        viewModel: ChatListViewModel = koinViewModel() // ← koinViewModel() reemplaza viewModel()
+        viewModel: ChatListViewModel = koinViewModel() // koinViewModel() reemplaza viewModel()
 ) {
         val sessions by viewModel.sessions.collectAsState()
         val searchQuery by viewModel.searchQuery.collectAsState()
@@ -92,7 +86,7 @@ fun ChatList(
         var sessionForMenu by remember { mutableStateOf<ChatSession?>(null) }
         var sessionToDelete by remember { mutableStateOf<ChatSession?>(null) }
 
-        // Context ya no se pasa — el ViewModel lo obtiene internamente
+        // Context ya no se pasa - el ViewModel lo obtiene internamente
         LaunchedEffect(Unit) { viewModel.loadSessions() }
 
         LaunchedEffect(newSessionId) {
@@ -114,7 +108,7 @@ fun ChatList(
                         currentTitle = session.title,
                         onConfirm = { newTitle ->
                                 viewModel.renameSession(session, newTitle)
-                        }, // ← sin context
+                        }, // sin context
                         onDismiss = { viewModel.dismissRenameDialog() }
                 )
         }
@@ -123,7 +117,7 @@ fun ChatList(
                 DeleteConfirmDialog(
                         sessionTitle = session.title,
                         onConfirm = {
-                                viewModel.deleteSession(session) // ← sin context
+                                viewModel.deleteSession(session) // sin context
                                 sessionToDelete = null
                         },
                         onDismiss = { sessionToDelete = null }
@@ -135,7 +129,7 @@ fun ChatList(
                 containerColor = FondoBlanco,
                 floatingActionButton = {
                         FloatingActionButton(
-                                onClick = { viewModel.createNewSession() }, // ← sin context
+                                onClick = { viewModel.createNewSession() },
                                 containerColor = FondoPrincipal,
                                 contentColor = FondoBlanco,
                                 shape = CircleShape,
@@ -149,51 +143,12 @@ fun ChatList(
                         }
                 },
                 bottomBar = {
-                        Surface(shadowElevation = 8.dp, color = FondoBlanco) {
-                                NavigationBar(containerColor = FondoBlanco, tonalElevation = 0.dp) {
-                                        NavigationBarItem(
-                                                selected = true,
-                                                onClick = {},
-                                                icon = {
-                                                        Icon(
-                                                                imageVector = Icons.Filled.Forum,
-                                                                contentDescription = "Chats"
-                                                        )
-                                                },
-                                                label = { Text("Chats", fontSize = 12.sp) },
-                                                colors =
-                                                        NavigationBarItemDefaults.colors(
-                                                                selectedIconColor = FondoPrincipal,
-                                                                selectedTextColor = FondoPrincipal,
-                                                                unselectedIconColor =
-                                                                        IconosMenuOscuro,
-                                                                unselectedTextColor =
-                                                                        IconosMenuOscuro,
-                                                                indicatorColor = Color.Transparent
-                                                        )
-                                        )
-                                        NavigationBarItem(
-                                                selected = false,
-                                                onClick = onNavigateToSettings,
-                                                icon = {
-                                                        Icon(
-                                                                imageVector = Icons.Filled.Settings,
-                                                                contentDescription = "Configuración"
-                                                        )
-                                                },
-                                                label = { Text("Configuración", fontSize = 12.sp) },
-                                                colors =
-                                                        NavigationBarItemDefaults.colors(
-                                                                selectedIconColor = FondoPrincipal,
-                                                                selectedTextColor = FondoPrincipal,
-                                                                unselectedIconColor =
-                                                                        IconosMenuOscuro,
-                                                                unselectedTextColor =
-                                                                        IconosMenuOscuro,
-                                                                indicatorColor = Color.Transparent
-                                                        )
-                                        )
-                                }
+                        Surface(shadowElevation = 16.dp, color = FondoBlanco) {
+                                BottomNavBar(
+                                        currentRoute = NavRoutes.CHAT_LIST,
+                                        onNavigateToChats = {},
+                                        onNavigateToSettings = onNavigateToSettings
+                                )
                         }
                 }
         ) { innerPadding ->
@@ -214,7 +169,6 @@ fun ChatList(
                         }
                 }
         }
-
         sessionForMenu?.let { session ->
                 DropdownMenu(expanded = true, onDismissRequest = { sessionForMenu = null }) {
                         DropdownMenuItem(
@@ -248,7 +202,7 @@ fun ChatList(
         }
 }
 
-// ─── Header ───────────────────────────────────────────────────────────────────
+// Header
 
 @Composable
 private fun TopSearchBar(searchQuery: String, onSearchQueryChange: (String) -> Unit) {
@@ -302,7 +256,7 @@ private fun TopSearchBar(searchQuery: String, onSearchQueryChange: (String) -> U
         }
 }
 
-// ─── Lista ────────────────────────────────────────────────────────────────────
+// Lista
 
 @Composable
 private fun SessionList(
@@ -368,7 +322,7 @@ private fun SessionItem(
         }
 }
 
-// ─── Estado vacío ─────────────────────────────────────────────────────────────
+// Estado vacío
 
 @Composable
 private fun EmptyState() {
@@ -383,7 +337,7 @@ private fun EmptyState() {
         }
 }
 
-// ─── Diálogo renombrar ────────────────────────────────────────────────────────
+// Diálogo renombrar
 
 @Composable
 private fun RenameDialog(currentTitle: String, onConfirm: (String) -> Unit, onDismiss: () -> Unit) {
@@ -435,7 +389,7 @@ private fun RenameDialog(currentTitle: String, onConfirm: (String) -> Unit, onDi
         )
 }
 
-// ─── Diálogo confirmar eliminación ───────────────────────────────────────────
+// Diálogo confirmar eliminación
 
 @Composable
 private fun DeleteConfirmDialog(
