@@ -60,6 +60,7 @@ dependencies {
     // Room
     implementation(libs.androidx.room.runtime)
     implementation(libs.androidx.room.ktx)
+    implementation("io.coil-kt:coil-compose:2.5.0")
     ksp(libs.androidx.room.compiler)
 
     // Koin

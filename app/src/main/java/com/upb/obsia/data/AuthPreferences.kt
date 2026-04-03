@@ -21,7 +21,19 @@ object AuthPreferences {
     fun clearSession(context: Context) {
         context.getSharedPreferences(PREFS_NAME, Context.MODE_PRIVATE)
             .edit()
-            .clear()
+            .remove(KEY_USER_ID)
             .apply()
+    }
+
+    fun savePhotoUri(context: Context, userId: Int, uri: String) {
+        context.getSharedPreferences(PREFS_NAME, Context.MODE_PRIVATE)
+            .edit()
+            .putString("photo_uri_$userId", uri)
+            .apply()
+    }
+
+    fun getPhotoUri(context: Context, userId: Int): String? {
+        return context.getSharedPreferences(PREFS_NAME, Context.MODE_PRIVATE)
+            .getString("photo_uri_$userId", null)
     }
 }
