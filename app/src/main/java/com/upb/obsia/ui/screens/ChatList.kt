@@ -164,40 +164,17 @@ fun ChatList(
                                         sessions = sessions,
                                         lastMessagePreviews = lastMessagePreviews,
                                         onSessionClick = onNavigateToChat,
-                                        onSessionLongPress = { session -> sessionForMenu = session }
+                                        onSessionLongPress = { session ->
+                                                sessionForMenu = session
+                                        },
+                                        sessionForMenu = sessionForMenu,
+                                        onDismissMenu = { sessionForMenu = null },
+                                        onRename = { session ->
+                                                viewModel.onSessionLongPress(session)
+                                        },
+                                        onDelete = { session -> sessionToDelete = session }
                                 )
                         }
-                }
-        }
-        sessionForMenu?.let { session ->
-                DropdownMenu(expanded = true, onDismissRequest = { sessionForMenu = null }) {
-                        DropdownMenuItem(
-                                text = { Text("Renombrar") },
-                                onClick = {
-                                        sessionForMenu = null
-                                        viewModel.onSessionLongPress(session)
-                                },
-                                leadingIcon = {
-                                        Icon(
-                                                imageVector = Icons.Filled.DriveFileRenameOutline,
-                                                contentDescription = null
-                                        )
-                                }
-                        )
-                        DropdownMenuItem(
-                                text = { Text("Eliminar", color = Color.Red) },
-                                onClick = {
-                                        sessionForMenu = null
-                                        sessionToDelete = session
-                                },
-                                leadingIcon = {
-                                        Icon(
-                                                imageVector = Icons.Filled.Delete,
-                                                contentDescription = null,
-                                                tint = Color.Red
-                                        )
-                                }
-                        )
                 }
         }
 }
@@ -263,7 +240,11 @@ private fun SessionList(
         sessions: List<ChatSession>,
         lastMessagePreviews: Map<Int, String>,
         onSessionClick: (Int) -> Unit,
-        onSessionLongPress: (ChatSession) -> Unit
+        onSessionLongPress: (ChatSession) -> Unit,
+        sessionForMenu: ChatSession?,
+        onDismissMenu: () -> Unit,
+        onRename: (ChatSession) -> Unit,
+        onDelete: (ChatSession) -> Unit
 ) {
         LazyColumn(contentPadding = PaddingValues(vertical = 8.dp)) {
                 items(items = sessions, key = { it.id }) { session ->
@@ -272,7 +253,11 @@ private fun SessionList(
                                 lastMessagePreview = lastMessagePreviews[session.id]
                                                 ?: "¡Arro está aquí para ayudarte!",
                                 onClick = { onSessionClick(session.id) },
-                                onLongPress = { onSessionLongPress(session) }
+                                onLongPress = { onSessionLongPress(session) },
+                                showMenu = sessionForMenu?.id == session.id,
+                                onDismissMenu = onDismissMenu,
+                                onRename = { onRename(session) },
+                                onDelete = { onDelete(session) }
                         )
                 }
         }
@@ -284,39 +269,75 @@ private fun SessionItem(
         session: ChatSession,
         lastMessagePreview: String,
         onClick: () -> Unit,
-        onLongPress: () -> Unit
+        onLongPress: () -> Unit,
+        showMenu: Boolean,
+        onDismissMenu: () -> Unit,
+        onRename: () -> Unit,
+        onDelete: () -> Unit
 ) {
-        var isPressed by remember { mutableStateOf(false) }
-
-        Row(
-                modifier =
-                        Modifier.fillMaxWidth()
-                                .background(if (isPressed) Color(0xFFF0F0F0) else FondoBlanco)
-                                .combinedClickable(
-                                        onClick = onClick,
-                                        onLongClick = onLongPress,
-                                        onClickLabel = "Abrir conversación",
-                                        onLongClickLabel = "Opciones de conversación"
+        Box {
+                Row(
+                        modifier =
+                                Modifier.fillMaxWidth()
+                                        .background(
+                                                if (showMenu) Color(0xFFF0F0F0) else FondoBlanco
+                                        )
+                                        .combinedClickable(
+                                                onClick = onClick,
+                                                onLongClick = onLongPress,
+                                                onClickLabel = "Abrir conversación",
+                                                onLongClickLabel = "Opciones de conversación"
+                                        )
+                                        .padding(horizontal = 20.dp, vertical = 14.dp),
+                        verticalAlignment = Alignment.CenterVertically
+                ) {
+                        Column(modifier = Modifier.weight(1f)) {
+                                Text(
+                                        text = session.title,
+                                        color = LetrasNegras,
+                                        fontSize = 15.sp,
+                                        fontWeight = FontWeight.Medium,
+                                        maxLines = 1,
+                                        overflow = TextOverflow.Ellipsis
                                 )
-                                .padding(horizontal = 20.dp, vertical = 14.dp),
-                verticalAlignment = Alignment.CenterVertically
-        ) {
-                Column(modifier = Modifier.weight(1f)) {
-                        Text(
-                                text = session.title,
-                                color = LetrasNegras,
-                                fontSize = 15.sp,
-                                fontWeight = FontWeight.Medium,
-                                maxLines = 1,
-                                overflow = TextOverflow.Ellipsis
+                                Spacer(modifier = Modifier.height(2.dp))
+                                Text(
+                                        text = lastMessagePreview,
+                                        color = LetrasNegras50,
+                                        fontSize = 13.sp,
+                                        maxLines = 1,
+                                        overflow = TextOverflow.Ellipsis
+                                )
+                        }
+                }
+
+                DropdownMenu(expanded = showMenu, onDismissRequest = onDismissMenu) {
+                        DropdownMenuItem(
+                                text = { Text("Renombrar") },
+                                onClick = {
+                                        onDismissMenu()
+                                        onRename()
+                                },
+                                leadingIcon = {
+                                        Icon(
+                                                imageVector = Icons.Filled.DriveFileRenameOutline,
+                                                contentDescription = null
+                                        )
+                                }
                         )
-                        Spacer(modifier = Modifier.height(2.dp))
-                        Text(
-                                text = lastMessagePreview,
-                                color = LetrasNegras50,
-                                fontSize = 13.sp,
-                                maxLines = 1,
-                                overflow = TextOverflow.Ellipsis
+                        DropdownMenuItem(
+                                text = { Text("Eliminar", color = Color.Red) },
+                                onClick = {
+                                        onDismissMenu()
+                                        onDelete()
+                                },
+                                leadingIcon = {
+                                        Icon(
+                                                imageVector = Icons.Filled.Delete,
+                                                contentDescription = null,
+                                                tint = Color.Red
+                                        )
+                                }
                         )
                 }
         }
